@@ -98,6 +98,27 @@ async function appendRow(values) {
 	if (!res.ok) throw new Error("append failed");
 }
 
+async function updateRow(row, values) {
+	const token = await getToken();
+	const range = `${SHEET_NAME}!A${row}:I${row}`;
+	const res = await fetch(
+		`${BASE}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+		{
+			method: "PUT",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ values: [values] }),
+		},
+	);
+	if (res.status === 401) {
+		accessToken = null;
+		throw new Error("auth");
+	}
+	if (!res.ok) throw new Error("update failed");
+}
+
 async function updateCell(a1, value) {
 	const token = await getToken();
 	const res = await fetch(
@@ -283,7 +304,7 @@ function renderNotes() {
 }
 
 function noteCard(n) {
-	const footer = n.resolved
+	const status = n.resolved
 		? '<span class="resolved-badge">✓ Resolved</span>'
 		: `<button class="resolve-btn" onclick="resolveNote('${n.id}')">Mark resolved</button>`;
 	return `<div class="note-card" data-part="${n.part}" id="note-${n.id}">
@@ -296,7 +317,10 @@ function noteCard(n) {
     <div class="note-text">${n.note}</div>
     <div class="note-footer">
       <span class="note-date">${formatDate(n.date)}</span>
-      ${footer}
+      <div class="note-actions">
+        ${status}
+        <button class="edit-btn" onclick="editNote('${n.id}')">Edit</button>
+      </div>
     </div>
   </div>`;
 }
@@ -312,6 +336,117 @@ async function resolveNote(id) {
 		showToast("Marked as resolved ✓");
 	} catch (e) {
 		note.resolved = false;
+		renderNotes();
+		if (e.message !== "auth")
+			showToast("Could not save — try again", "#c96b6b");
+	}
+}
+
+// ── Edit Note ─────────────────────────────────────────────────────────────
+function editNote(id) {
+	const note = notes.find((n) => String(n.id) === String(id));
+	if (!note) return;
+	const card = document.getElementById(`note-${id}`);
+	if (!card) return;
+	const parts = ["Everyone", "Tenor", "Lead", "Baritone", "Bass", "Multiple"];
+	const priorities = ["High", "Medium", "Low"];
+	const tags = [
+		"Pitch",
+		"Diction",
+		"Dynamics",
+		"Rhythm",
+		"Expression",
+		"Blend",
+		"General",
+	];
+	card.innerHTML = `
+    <div class="edit-form">
+      <div class="field-row">
+        <div class="field">
+          <label>Measure(s)</label>
+          <input id="ef-measure-${id}" value="${note.measure}" placeholder="e.g. 32–36" />
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input id="ef-date-${id}" type="date" value="${note.date}" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Section</label>
+          <select id="ef-part-${id}">
+            ${parts.map((p) => `<option ${note.part === p ? "selected" : ""}>${p}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="ef-priority-${id}">
+            ${priorities.map((p) => `<option ${note.priority === p ? "selected" : ""}>${p}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tag</label>
+        <select id="ef-tag-${id}">
+          ${tags.map((t) => `<option ${note.tag === t ? "selected" : ""}>${t}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="ef-note-${id}">${note.note}</textarea>
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-edit-btn" onclick="renderNotes()">Cancel</button>
+        <button class="save-edit-btn" id="ef-save-${id}" onclick="saveEdit('${id}')">Save</button>
+      </div>
+    </div>`;
+}
+
+async function saveEdit(id) {
+	const note = notes.find((n) => String(n.id) === String(id));
+	if (!note) return;
+
+	const measure = document.getElementById(`ef-measure-${id}`).value.trim();
+	const date = document.getElementById(`ef-date-${id}`).value;
+	const part = document.getElementById(`ef-part-${id}`).value;
+	const priority = document.getElementById(`ef-priority-${id}`).value;
+	const tag = document.getElementById(`ef-tag-${id}`).value;
+	const noteText = document.getElementById(`ef-note-${id}`).value.trim();
+
+	if (!noteText || !date) {
+		showToast("Date and Note are required", "#c96b6b");
+		return;
+	}
+
+	const btn = document.getElementById(`ef-save-${id}`);
+	btn.disabled = true;
+	btn.textContent = "Saving…";
+
+	const prev = { ...note };
+	note.measure = measure;
+	note.date = date;
+	note.part = part;
+	note.priority = priority;
+	note.tag = tag;
+	note.note = noteText;
+
+	try {
+		await updateRow(note._row, [
+			note.id,
+			note.song,
+			measure,
+			date,
+			part,
+			priority,
+			tag,
+			noteText,
+			note.resolved ? "true" : "false",
+		]);
+		renderFilterChips();
+		renderNotes();
+		showToast("Note updated ✓");
+	} catch (e) {
+		Object.assign(note, prev);
 		renderNotes();
 		if (e.message !== "auth")
 			showToast("Could not save — try again", "#c96b6b");
