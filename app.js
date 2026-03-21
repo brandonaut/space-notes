@@ -331,6 +331,58 @@ async function resolveNote(id) {
 	}
 }
 
+// ── Copy to clipboard ─────────────────────────────────────────────────────
+function copyNotes() {
+	const open = notes.filter((n) => n.song === currentSong && !n.resolved);
+	if (!open.length) {
+		showToast("No open notes to copy", "#7a7585");
+		return;
+	}
+
+	const fmt = (n) => {
+		const prefix = n.measure ? `m.${n.measure} ` : "";
+		const meta = [n.part, n.tag].filter(Boolean).join(", ");
+		return `- ${prefix}(${meta}) ${n.note}`;
+	};
+
+	let text = `*${currentSong}*\n`;
+
+	if (currentView === "measure") {
+		const groups = {};
+		for (const n of open) {
+			const k = n.measure || "";
+			if (!groups[k]) groups[k] = [];
+			groups[k].push(n);
+		}
+		for (const m of Object.keys(groups).sort(
+			(a, b) => measureStart(a) - measureStart(b),
+		)) {
+			for (const n of groups[m].sort((a, b) => (a.date < b.date ? 1 : -1))) {
+				text += `${fmt(n)}\n`;
+			}
+		}
+	} else {
+		const groups = {};
+		for (const n of open) {
+			if (!groups[n.date]) groups[n.date] = [];
+			groups[n.date].push(n);
+		}
+		for (const d of Object.keys(groups).sort().reverse()) {
+			text += `\n_${formatDate(d)}_\n`;
+			for (const n of groups[d].sort(
+				(a, b) => measureStart(a.measure) - measureStart(b.measure),
+			)) {
+				text += `${fmt(n)}\n`;
+			}
+		}
+	}
+
+	navigator.clipboard
+		.writeText(text.trim())
+		.then(() => showToast("Copied to clipboard ✓"))
+		.catch(() => showToast("Could not copy", "#c96b6b"));
+}
+
 // ── Edit Note ─────────────────────────────────────────────────────────────
 function editNote(id) {
 	const note = notes.find((n) => String(n.id) === String(id));
