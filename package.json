@@ -2,6 +2,7 @@
   "name": "space-notes",
   "private": true,
   "scripts": {
+    "dev": "bunx serve .",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check --write ."

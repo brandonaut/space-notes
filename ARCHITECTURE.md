@@ -23,7 +23,7 @@ It should keep working without maintenance.
 
 ```
 ┌─────────────────────────────────┐
-│        chorus-notes.html        │
+│        index.html        │
 │  (static file, hosted anywhere) │
 │                                 │
 │  • Renders song list            │
@@ -58,7 +58,7 @@ It should keep working without maintenance.
 
 ## Component Breakdown
 
-### `chorus-notes.html` — the client
+### `index.html` — the client
 
 A single self-contained HTML file with no build step, no dependencies, and no external JS frameworks.
 Everything is vanilla HTML, CSS, and JavaScript.

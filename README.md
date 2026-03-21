@@ -21,17 +21,17 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 
 ## Deployment
 
-The entire app is a single HTML file (`chorus-notes.html`). Host it anywhere that serves static files:
+The entire app is a single HTML file (`index.html`). Host it anywhere that serves static files:
 
 ### Netlify Drop (recommended — no account needed)
 
 1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Drag `chorus-notes.html` onto the page
+2. Drag `index.html` onto the page
 3. Copy the generated URL
 
 ### GitHub Pages
 
-1. Create a repository and add `chorus-notes.html` renamed to `index.html`
+1. Create a repository and add `index.html` renamed to `index.html`
 2. Go to **Settings → Pages** and enable Pages from the `main` branch
 3. Your URL will be `https://<username>.github.io/<repo>`
 
@@ -87,7 +87,7 @@ Tap **↻** on the home screen to pull the latest notes from the sheet.
 
 ## Editing the App
 
-The API endpoint and Sheet ID are set near the top of the `<script>` block in `chorus-notes.html`:
+The API endpoint and Sheet ID are set near the top of the `<script>` block in `index.html`:
 
 ```javascript
 cont API = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
