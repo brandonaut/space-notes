@@ -212,15 +212,7 @@ function renderFilterChips() {
 	const present = new Set(
 		notes.filter((n) => n.song === currentSong).map((n) => n.part),
 	);
-	const all = [
-		"All",
-		"Tenor",
-		"Lead",
-		"Baritone",
-		"Bass",
-		"Everyone",
-		"Multiple",
-	];
+	const all = ["All", "Tenor", "Lead", "Baritone", "Bass", "Multiple"];
 	const chips = all.filter((p) => p === "All" || present.has(p));
 	document.getElementById("filter-chips").innerHTML = chips
 		.map(
@@ -348,7 +340,7 @@ function editNote(id) {
 	if (!note) return;
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
-	const parts = ["Everyone", "Tenor", "Lead", "Baritone", "Bass", "Multiple"];
+	const parts = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
 	const priorities = ["High", "Medium", "Low"];
 	const tags = [
 		"Pitch",
