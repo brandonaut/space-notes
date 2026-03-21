@@ -295,8 +295,8 @@ function renderNotes() {
 
 function noteCard(n) {
 	const status = n.resolved
-		? '<span class="resolved-badge">✓ Resolved</span>'
-		: `<button class="resolve-btn" onclick="resolveNote('${n.id}')">Mark resolved</button>`;
+		? `<button class="resolved-badge" onclick="resolveNote('${n.id}', false)">✓ Resolved</button>`
+		: `<button class="resolve-btn" onclick="resolveNote('${n.id}', true)">Mark resolved</button>`;
 	return `<div class="note-card" data-part="${n.part}" id="note-${n.id}">
     <div class="note-card-top">
       <span class="part-badge ${n.part}">${n.part}</span>
@@ -315,16 +315,19 @@ function noteCard(n) {
 }
 
 // ── Resolve ───────────────────────────────────────────────────────────────
-async function resolveNote(id) {
+async function resolveNote(id, resolved) {
 	const note = notes.find((n) => String(n.id) === String(id));
 	if (!note) return;
-	note.resolved = true;
+	note.resolved = resolved;
 	renderNotes();
 	try {
-		await updateCell(`${SHEET_NAME}!I${note._row}`, "true");
-		showToast("Marked as resolved ✓");
+		await updateCell(
+			`${SHEET_NAME}!I${note._row}`,
+			resolved ? "true" : "false",
+		);
+		showToast(resolved ? "Marked as resolved ✓" : "Reopened");
 	} catch (e) {
-		note.resolved = false;
+		note.resolved = !resolved;
 		renderNotes();
 		if (e.message !== "auth")
 			showToast("Could not save — try again", "#c96b6b");
