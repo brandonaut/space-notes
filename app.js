@@ -176,7 +176,6 @@ function renderSongList() {
 		.map((song) => {
 			const sNotes = notes.filter((n) => n.song === song);
 			const open = sNotes.filter((n) => !n.resolved);
-			const high = open.filter((n) => n.priority === "High").length;
 			const lastDate = sNotes
 				.map((n) => n.date)
 				.sort()
@@ -185,7 +184,6 @@ function renderSongList() {
       <div class="song-card-name">${song}</div>
       <div class="song-card-meta">
         <span class="meta-pill">${open.length} open note${open.length !== 1 ? "s" : ""}</span>
-        ${high ? `<span class="meta-pill high">⬤ ${high} high priority</span>` : ""}
         <span class="meta-pill">Last: ${formatDate(lastDate)}</span>
       </div>
     </div>`;
@@ -303,7 +301,6 @@ function noteCard(n) {
     <div class="note-card-top">
       <span class="part-badge ${n.part}">${n.part}</span>
       ${n.measure ? `<span class="measure-badge">m.${n.measure}</span>` : ""}
-      <div class="priority-dot ${n.priority}" title="${n.priority} priority"></div>
       <span class="tag-badge">${n.tag}</span>
     </div>
     <div class="note-text">${n.note}</div>
@@ -341,7 +338,6 @@ function editNote(id) {
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
 	const parts = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
-	const priorities = ["High", "Medium", "Low"];
 	const tags = [
 		"Pitch",
 		"Diction",
@@ -363,19 +359,11 @@ function editNote(id) {
           <input id="ef-date-${id}" type="date" value="${note.date}" />
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Section</label>
-          <select id="ef-part-${id}">
-            ${parts.map((p) => `<option ${note.part === p ? "selected" : ""}>${p}</option>`).join("")}
-          </select>
-        </div>
-        <div class="field">
-          <label>Priority</label>
-          <select id="ef-priority-${id}">
-            ${priorities.map((p) => `<option ${note.priority === p ? "selected" : ""}>${p}</option>`).join("")}
-          </select>
-        </div>
+      <div class="field">
+        <label>Section</label>
+        <select id="ef-part-${id}">
+          ${parts.map((p) => `<option ${note.part === p ? "selected" : ""}>${p}</option>`).join("")}
+        </select>
       </div>
       <div class="field">
         <label>Tag</label>
@@ -401,7 +389,6 @@ async function saveEdit(id) {
 	const measure = document.getElementById(`ef-measure-${id}`).value.trim();
 	const date = document.getElementById(`ef-date-${id}`).value;
 	const part = document.getElementById(`ef-part-${id}`).value;
-	const priority = document.getElementById(`ef-priority-${id}`).value;
 	const tag = document.getElementById(`ef-tag-${id}`).value;
 	const noteText = document.getElementById(`ef-note-${id}`).value.trim();
 
@@ -418,7 +405,6 @@ async function saveEdit(id) {
 	note.measure = measure;
 	note.date = date;
 	note.part = part;
-	note.priority = priority;
 	note.tag = tag;
 	note.note = noteText;
 
@@ -429,7 +415,7 @@ async function saveEdit(id) {
 			measure,
 			date,
 			part,
-			priority,
+			note.priority,
 			tag,
 			noteText,
 			note.resolved ? "true" : "false",
@@ -460,7 +446,6 @@ async function submitNote() {
 	const measure = document.getElementById("f-measure").value.trim();
 	const date = document.getElementById("f-date").value;
 	const part = document.getElementById("f-part").value;
-	const priority = document.getElementById("f-priority").value;
 	const tag = document.getElementById("f-tag").value;
 	const noteText = document.getElementById("f-note").value.trim();
 
@@ -476,7 +461,6 @@ async function submitNote() {
 		measure,
 		date,
 		part,
-		priority,
 		tag,
 		note: noteText,
 		resolved: false,
@@ -493,7 +477,7 @@ async function submitNote() {
 			measure,
 			date,
 			part,
-			priority,
+			"",
 			tag,
 			noteText,
 			"false",
