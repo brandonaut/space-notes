@@ -1,4 +1,4 @@
-# 🎵 Chorus Notes
+# 🎵 Space Notes
 
 A mobile-first web app for capturing and browsing barbershop chorus rehearsal notes.
 Directors and section leaders add notes after rehearsal; chorus members browse them by song, measure, or rehearsal date.
@@ -21,19 +21,18 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 
 ## Deployment
 
-The entire app is a single HTML file (`index.html`). Host it anywhere that serves static files:
+Host the three files (`index.html`, `app.css`, `app.js`) anywhere that serves static files:
 
 ### Netlify Drop (recommended — no account needed)
 
 1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Drag `index.html` onto the page
+2. Drag the folder onto the page
 3. Copy the generated URL
 
 ### GitHub Pages
 
-1. Create a repository and add `index.html` renamed to `index.html`
-2. Go to **Settings → Pages** and enable Pages from the `main` branch
-3. Your URL will be `https://<username>.github.io/<repo>`
+1. Push to a repository with Pages enabled (**Settings → Pages**, source: `main` branch)
+2. Your URL will be `https://<username>.github.io/<repo>`
 
 Once deployed, **pin the URL in your Slack channel** so members always have it one tap away.
 
@@ -41,7 +40,9 @@ Once deployed, **pin the URL in your Slack channel** so members always have it o
 
 ## Google Sheet Backend
 
-Notes are stored in a Google Sheet via a Google Apps Script Web App.
+Notes are stored directly in a Google Sheet via the Sheets API v4.
+Reading is anonymous (API key); writing requires signing in with a Google account.
+
 The sheet has these columns:
 
 | Column | Description |
@@ -56,12 +57,6 @@ The sheet has these columns:
 | `note` | Note text |
 | `resolved` | `true` or `false` |
 
-The Apps Script Web App accepts three actions via query parameters:
-
-- `?action=get` — returns all rows as JSON
-- `?action=add&note=<json>` — appends a new row
-- `?action=resolve&id=<id>` — marks a row resolved
-
 ---
 
 ## Usage
@@ -69,8 +64,9 @@ The Apps Script Web App accepts three actions via query parameters:
 ### Adding a note
 
 1. Tap **+ Add Note** in the top-right corner
-2. Fill in the song name (autocompletes from existing songs), measure(s), date, section, priority, tag, and note text
-3. Tap **Save Note** — the note is written to the Google Sheet immediately
+2. Sign in with your Google account when prompted
+3. Fill in the song name (autocompletes from existing songs), measure(s), date, section, priority, tag, and note text
+4. Tap **Save Note** — the note is written to the Google Sheet immediately
 
 ### Browsing notes
 
@@ -85,12 +81,20 @@ Tap **↻** on the home screen to pull the latest notes from the sheet.
 
 ---
 
-## Editing the App
+## Configuration
 
-The API endpoint and Sheet ID are set near the top of the `<script>` block in `index.html`:
+The API key, OAuth client ID, and Sheet ID are set at the top of `app.js`:
 
 ```javascript
-cont API = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+const API_KEY    = '...';
+const CLIENT_ID  = '...';
+const SHEET_ID   = '...';
+const SHEET_NAME = 'Sheet1';
 ```
 
-To change the script (e.g. after re-deploying the Apps Script), update this constant and re-upload the HTML file to your host.
+## Local Development
+
+```bash
+bun install
+bun run dev   # serves on http://localhost:3000
+```

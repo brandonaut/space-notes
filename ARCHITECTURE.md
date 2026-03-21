@@ -1,4 +1,4 @@
-# Chorus Notes — Architecture
+# Space Notes — Architecture
 
 ## Design Goals
 
