@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Chorus Notes</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client"></script>
 <style>
   :root {
     --bg:         #0f0f13;
@@ -557,37 +558,83 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbzaxrmjVO00Ggwk-w_2q6uw9RcL5Se1ugro8xKOQJJEjus3QlHsQQXDKVOZQIt6IK__Ww/exec';
+const API_KEY    = 'AIzaSyADfoNjABwUYbIk6nkgjaWCD1iuOI3qH4w';
+const CLIENT_ID  = '582732782667-7nkuge3mspe5p1q0p7t52omjndiuir3s.apps.googleusercontent.com';
+const SHEET_ID   = '1V2SNY3C8Pd5Jw5ozg6fQAAp_ndPuw8X7IH5V7RQYvC0';
+const SHEET_NAME = 'Sheet1';
+const BASE       = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
-let notes = [];
-let currentSong = null;
-let currentView = 'measure';
-let activeFilter = 'All';
+let notes = [], currentSong = null, currentView = 'measure', activeFilter = 'All';
+let accessToken = null, tokenClient, pendingAuth = null;
 
-// ── API ───────────────────────────────────────────────────────────────────
-async function apiCall(params) {
-  const url = API + '?' + new URLSearchParams(params);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Network error');
-  return res.json();
+// ── Auth ──────────────────────────────────────────────────────────────────
+function initAuth() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: resp => {
+      if (resp.error) { showToast('Sign-in cancelled', '#c96b6b'); pendingAuth = null; return; }
+      accessToken = resp.access_token;
+      const cb = pendingAuth; pendingAuth = null;
+      if (cb) cb();
+    }
+  });
 }
 
+function getToken() {
+  return new Promise(resolve => {
+    if (accessToken) { resolve(accessToken); return; }
+    pendingAuth = () => resolve(accessToken);
+    tokenClient.requestAccessToken({ prompt: 'select_account' });
+  });
+}
+
+// ── Sheets read (anonymous) ───────────────────────────────────────────────
 async function loadNotes() {
   document.getElementById('loading-overlay').classList.remove('hidden');
   hideError('list-error');
   try {
-    const data = await apiCall({ action: 'get' });
-    if (!data.ok) throw new Error('Bad response');
-    notes = (data.notes || []).map(n => ({
-      ...n,
-      resolved: n.resolved === 'true' || n.resolved === true
-    }));
+    const res = await fetch(`${BASE}/values/${SHEET_NAME}?key=${API_KEY}`);
+    if (!res.ok) throw new Error();
+    const { values = [] } = await res.json();
+    const [headers, ...rows] = values;
+    if (!headers) { notes = []; renderSongList(); return; }
+    notes = rows.map((r, i) => {
+      const obj = {};
+      headers.forEach((h, j) => obj[h] = r[j] ?? '');
+      obj._row = i + 2;
+      obj.resolved = obj.resolved === 'true' || obj.resolved === true;
+      return obj;
+    });
     renderSongList();
   } catch(e) {
     showError('list-error', 'Could not load notes. Check your connection and try refreshing.');
   } finally {
     document.getElementById('loading-overlay').classList.add('hidden');
   }
+}
+
+// ── Sheets write (authenticated) ──────────────────────────────────────────
+async function appendRow(values) {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/values/${SHEET_NAME}:append?valueInputOption=RAW`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [values] })
+  });
+  if (res.status === 401) { accessToken = null; throw new Error('auth'); }
+  if (!res.ok) throw new Error('append failed');
+}
+
+async function updateCell(a1, value) {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/values/${encodeURIComponent(a1)}?valueInputOption=RAW`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values: [[value]] })
+  });
+  if (res.status === 401) { accessToken = null; throw new Error('auth'); }
+  if (!res.ok) throw new Error('update failed');
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────
@@ -727,12 +774,12 @@ async function resolveNote(id) {
   note.resolved = true;
   renderNotes();
   try {
-    await apiCall({ action: 'resolve', id });
+    await updateCell(`${SHEET_NAME}!I${note._row}`, 'true');
     showToast('Marked as resolved ✓');
   } catch(e) {
     note.resolved = false;
     renderNotes();
-    showToast('Could not save — try again', '#c96b6b');
+    if (e.message !== 'auth') showToast('Could not save — try again', '#c96b6b');
   }
 }
 
@@ -756,13 +803,14 @@ async function submitNote() {
     return;
   }
 
-  const newNote = { id: Date.now(), song, measure, date, part, priority, tag, note: noteText, resolved: false };
+  const id = Date.now();
+  const newNote = { id, song, measure, date, part, priority, tag, note: noteText, resolved: false, _row: notes.length + 2 };
   const btn = document.getElementById('submit-btn');
   btn.classList.add('loading'); btn.disabled = true;
 
   try {
-    await apiCall({ action: 'add', note: JSON.stringify(newNote) });
-    notes.unshift(newNote);
+    await appendRow([id, song, measure, date, part, priority, tag, noteText, 'false']);
+    notes.push(newNote);
     document.getElementById('f-song').value    = '';
     document.getElementById('f-measure').value = '';
     document.getElementById('f-note').value    = '';
@@ -770,7 +818,7 @@ async function submitNote() {
     currentSong = song;
     openSong(song);
   } catch(e) {
-    showError('form-error', 'Could not save. Check your connection and try again.');
+    if (e.message !== 'auth') showError('form-error', 'Could not save. Check your connection and try again.');
   } finally {
     btn.classList.remove('loading'); btn.disabled = false;
   }
@@ -792,6 +840,7 @@ function showError(id, msg) {
 }
 function hideError(id) { document.getElementById(id).classList.remove('show'); }
 
+initAuth();
 loadNotes();
 </script>
 </body>
