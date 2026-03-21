@@ -160,7 +160,7 @@ function renderSongList() {
 				.map((n) => n.date)
 				.sort()
 				.reverse()[0];
-			return `<div class="song-card" onclick="openSong(${JSON.stringify(song)})">
+			return `<div class="song-card" onclick='openSong(${JSON.stringify(song)})'>
       <div class="song-card-name">${song}</div>
       <div class="song-card-meta">
         <span class="meta-pill">${open.length} open note${open.length !== 1 ? "s" : ""}</span>
