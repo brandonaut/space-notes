@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Chorus Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #0f0f13;
+    --surface:    #1a1a22;
+    --surface2:   #23232e;
+    --border:     #2e2e3a;
+    --accent:     #c9a84c;
+    --accent-dim: #9a7a30;
+    --text:       #e8e4da;
+    --muted:      #7a7585;
+    --tenor:      #5b9bd5;
+    --lead:       #5bb87a;
+    --bari:       #c9a84c;
+    --bass:       #c96b6b;
+    --all:        #a07ec9;
+    --multi:      #5bbfb5;
+    --radius:     12px;
+    --radius-sm:  8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .app-header .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-btn {
+    background: var(--accent);
+    color: #0f0f13;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity .15s;
+  }
+  .header-btn:active { opacity: .75; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .screen-pad { padding: 20px; }
+
+  /* Loading */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    gap: 16px;
+  }
+  .loading-overlay.hidden { display: none; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay p { color: var(--muted); font-size: 14px; }
+
+  /* Song list */
+  .songs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .refresh-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    transition: color .15s;
+  }
+  .refresh-btn:hover { color: var(--accent); }
+
+  .song-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .song-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+  .song-card:active { transform: scale(.985); }
+  .song-card:hover  { border-color: var(--accent-dim); }
+  .song-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .song-card-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .meta-pill {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .meta-pill.high { color: #c96b6b; background: rgba(201,107,107,.12); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; line-height: 1.5; }
+
+  /* Detail */
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    margin-bottom: 16px;
+  }
+  .song-title-block { margin-bottom: 20px; }
+  .song-title-block h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .view-toggle {
+    display: flex;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+  .view-toggle button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: 0.04em;
+  }
+  .view-toggle button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .chip.active { border-color: currentColor; }
+  .chip[data-part="All"].active      { color: var(--text);  background: rgba(232,228,218,.1);  border-color: var(--text); }
+  .chip[data-part="Tenor"].active    { color: var(--tenor); background: rgba(91,155,213,.12);  border-color: var(--tenor); }
+  .chip[data-part="Lead"].active     { color: var(--lead);  background: rgba(91,184,122,.12);  border-color: var(--lead); }
+  .chip[data-part="Baritone"].active { color: var(--bari);  background: rgba(201,168,76,.12);  border-color: var(--bari); }
+  .chip[data-part="Bass"].active     { color: var(--bass);  background: rgba(201,107,107,.12); border-color: var(--bass); }
+  .chip[data-part="Everyone"].active { color: var(--all);   background: rgba(160,126,201,.12); border-color: var(--all); }
+  .chip[data-part="Multiple"].active { color: var(--multi); background: rgba(91,191,181,.12);  border-color: var(--multi); }
+
+  .group-header {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    border-left: 3px solid transparent;
+  }
+  .note-card[data-part="Tenor"]    { border-left-color: var(--tenor); }
+  .note-card[data-part="Lead"]     { border-left-color: var(--lead); }
+  .note-card[data-part="Baritone"] { border-left-color: var(--bari); }
+  .note-card[data-part="Bass"]     { border-left-color: var(--bass); }
+  .note-card[data-part="Everyone"] { border-left-color: var(--all); }
+  .note-card[data-part="Multiple"] { border-left-color: var(--multi); }
+
+  .note-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .part-badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .part-badge.Tenor    { color: var(--tenor); background: rgba(91,155,213,.15); }
+  .part-badge.Lead     { color: var(--lead);  background: rgba(91,184,122,.15); }
+  .part-badge.Baritone { color: var(--bari);  background: rgba(201,168,76,.15); }
+  .part-badge.Bass     { color: var(--bass);  background: rgba(201,107,107,.15); }
+  .part-badge.Everyone { color: var(--all);   background: rgba(160,126,201,.15); }
+  .part-badge.Multiple { color: var(--multi); background: rgba(91,191,181,.15); }
+
+  .measure-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .tag-badge { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.High   { background: var(--bass); }
+  .priority-dot.Medium { background: var(--bari); }
+  .priority-dot.Low    { background: var(--lead); }
+
+  .note-text { font-size: 14px; line-height: 1.55; color: var(--text); }
+  .note-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 8px;
+  }
+  .note-date { font-size: 11px; color: var(--muted); }
+  .resolved-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--lead);
+    background: rgba(91,184,122,.12);
+    padding: 1px 7px;
+    border-radius: 20px;
+  }
+  .resolve-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .resolve-btn:hover { color: var(--lead); border-color: var(--lead); }
+
+  /* Form */
+  .form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color .15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus { border-color: var(--accent); }
+  .field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+  .field select option { background: var(--surface2); }
+  .field-row { display: flex; gap: 12px; }
+  .field-row .field { flex: 1; min-width: 0; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0f0f13;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .submit-btn:active:not(:disabled) { opacity: .8; }
+  .btn-spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,.25);
+    border-top-color: #0f0f13;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .submit-btn.loading .btn-spinner { display: block; }
+
+  .error-banner {
+    background: rgba(201,107,107,.15);
+    border: 1px solid rgba(201,107,107,.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #e07070;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .error-banner.show { display: block; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--lead);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .no-notes { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Loading notes…</p>
+</div>
+
+<header class="app-header">
+  <div>
+    <h1>🎵 Chorus Notes</h1>
+    <div class="subtitle">Rehearsal Log</div>
+  </div>
+  <button class="header-btn" onclick="showScreen('add')">+ Add Note</button>
+</header>
+
+<!-- Song List -->
+<div id="screen-songs" class="screen active screen-pad">
+  <div class="songs-header">
+    <div class="section-label">Songs</div>
+    <button class="refresh-btn" onclick="loadNotes()" title="Refresh">↻</button>
+  </div>
+  <div class="error-banner" id="list-error"></div>
+  <div id="song-list"></div>
+</div>
+
+<!-- Song Detail -->
+<div id="screen-detail" class="screen screen-pad">
+  <button class="back-btn" onclick="showScreen('songs')">← All Songs</button>
+  <div class="song-title-block">
+    <h2 id="detail-song-name"></h2>
+    <div id="detail-note-count" class="section-label"></div>
+  </div>
+  <div class="view-toggle">
+    <button id="btn-measure" class="active" onclick="setView('measure')">By Measure</button>
+    <button id="btn-chron"                  onclick="setView('chron')">By Rehearsal</button>
+  </div>
+  <div class="filter-row" id="filter-chips"></div>
+  <div id="detail-notes"></div>
+</div>
+
+<!-- Add Note -->
+<div id="screen-add" class="screen screen-pad">
+  <button class="back-btn" onclick="showScreen('songs')">← Cancel</button>
+  <div class="form-title">Add a Note</div>
+  <div class="error-banner" id="form-error"></div>
+
+  <div class="field">
+    <label>Song</label>
+    <input id="f-song" list="song-datalist" placeholder="Song name…" autocomplete="off">
+    <datalist id="song-datalist"></datalist>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Measure(s)</label>
+      <input id="f-measure" placeholder="e.g. 32–36">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input id="f-date" type="date">
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Section</label>
+      <select id="f-part">
+        <option value="Everyone">Everyone</option>
+        <option value="Tenor">Tenor</option>
+        <option value="Lead">Lead</option>
+        <option value="Baritone">Baritone</option>
+        <option value="Bass">Bass</option>
+        <option value="Multiple">Multiple</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Priority</label>
+      <select id="f-priority">
+        <option value="High">🔴 High</option>
+        <option value="Medium" selected>🟡 Medium</option>
+        <option value="Low">🟢 Low</option>
+      </select>
+    </div>
+  </div>
+  <div class="field">
+    <label>Tag</label>
+    <select id="f-tag">
+      <option>Pitch</option>
+      <option>Diction</option>
+      <option>Dynamics</option>
+      <option>Rhythm</option>
+      <option>Expression</option>
+      <option>Blend</option>
+      <option>General</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Note</label>
+    <textarea id="f-note" placeholder="Describe the note from the director or section leader…"></textarea>
+  </div>
+  <button class="submit-btn" id="submit-btn" onclick="submitNote()">
+    <div class="btn-spinner"></div>
+    <span class="btn-text">Save Note</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzaxrmjVO00Ggwk-w_2q6uw9RcL5Se1ugro8xKOQJJEjus3QlHsQQXDKVOZQIt6IK__Ww/exec';
+
+let notes = [];
+let currentSong = null;
+let currentView = 'measure';
+let activeFilter = 'All';
+
+// ── API ───────────────────────────────────────────────────────────────────
+async function apiCall(params) {
+  const url = API + '?' + new URLSearchParams(params);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Network error');
+  return res.json();
+}
+
+async function loadNotes() {
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  hideError('list-error');
+  try {
+    const data = await apiCall({ action: 'get' });
+    if (!data.ok) throw new Error('Bad response');
+    notes = (data.notes || []).map(n => ({
+      ...n,
+      resolved: n.resolved === 'true' || n.resolved === true
+    }));
+    renderSongList();
+  } catch(e) {
+    showError('list-error', 'Could not load notes. Check your connection and try refreshing.');
+  } finally {
+    document.getElementById('loading-overlay').classList.add('hidden');
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById({ songs: 'screen-songs', detail: 'screen-detail', add: 'screen-add' }[name]).classList.add('active');
+  if (name === 'songs')  renderSongList();
+  if (name === 'add') {
+    populateSongDatalist();
+    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+    if (currentSong) document.getElementById('f-song').value = currentSong;
+    hideError('form-error');
+  }
+  window.scrollTo(0,0);
+}
+
+// ── Song List ─────────────────────────────────────────────────────────────
+function renderSongList() {
+  const container = document.getElementById('song-list');
+  const songs = [...new Set(notes.map(n => n.song))].filter(Boolean).sort();
+  if (!songs.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🎶</div><p>No songs yet.<br>Tap <strong>+ Add Note</strong> to get started.</p></div>`;
+    return;
+  }
+  container.innerHTML = songs.map(song => {
+    const sNotes   = notes.filter(n => n.song === song);
+    const open     = sNotes.filter(n => !n.resolved);
+    const high     = open.filter(n => n.priority === 'High').length;
+    const lastDate = sNotes.map(n => n.date).sort().reverse()[0];
+    return `<div class="song-card" onclick="openSong(${JSON.stringify(song)})">
+      <div class="song-card-name">${song}</div>
+      <div class="song-card-meta">
+        <span class="meta-pill">${open.length} open note${open.length!==1?'s':''}</span>
+        ${high ? `<span class="meta-pill high">⬤ ${high} high priority</span>` : ''}
+        <span class="meta-pill">Last: ${formatDate(lastDate)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openSong(song) {
+  currentSong  = song;
+  activeFilter = 'All';
+  currentView  = 'measure';
+  document.getElementById('detail-song-name').textContent = song;
+  document.getElementById('btn-measure').classList.add('active');
+  document.getElementById('btn-chron').classList.remove('active');
+  renderFilterChips();
+  renderNotes();
+  document.getElementById('screen-songs').classList.remove('active');
+  document.getElementById('screen-detail').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── Chips ─────────────────────────────────────────────────────────────────
+function renderFilterChips() {
+  const present = new Set(notes.filter(n => n.song === currentSong).map(n => n.part));
+  const all = ['All','Tenor','Lead','Baritone','Bass','Everyone','Multiple'];
+  const chips = all.filter(p => p === 'All' || present.has(p));
+  document.getElementById('filter-chips').innerHTML = chips.map(p =>
+    `<div class="chip ${activeFilter===p?'active':''}" data-part="${p}" onclick="setFilter('${p}')">${p}</div>`
+  ).join('');
+}
+
+function setFilter(part) {
+  activeFilter = part;
+  renderFilterChips();
+  renderNotes();
+}
+
+// ── Notes view ────────────────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  document.getElementById('btn-measure').classList.toggle('active', v==='measure');
+  document.getElementById('btn-chron').classList.toggle('active',   v==='chron');
+  renderNotes();
+}
+
+function measureStart(m) {
+  const n = parseInt((m||'0').toString().replace(/[^0-9]/,''));
+  return isNaN(n) ? 9999 : n;
+}
+
+function renderNotes() {
+  let songNotes = notes.filter(n => n.song === currentSong);
+  const open = songNotes.filter(n => !n.resolved).length;
+  document.getElementById('detail-note-count').textContent =
+    `${songNotes.length} note${songNotes.length!==1?'s':''} · ${open} open`;
+
+  if (activeFilter !== 'All') songNotes = songNotes.filter(n => n.part === activeFilter);
+
+  const container = document.getElementById('detail-notes');
+  if (!songNotes.length) { container.innerHTML = `<div class="no-notes">No notes for this filter.</div>`; return; }
+
+  let html = '';
+  if (currentView === 'measure') {
+    const groups = {};
+    songNotes.forEach(n => { const k = n.measure||'General'; (groups[k]=groups[k]||[]).push(n); });
+    Object.keys(groups).sort((a,b) => measureStart(a)-measureStart(b)).forEach(m => {
+      html += `<div class="group-header">Measure ${m}</div>`;
+      groups[m].sort((a,b) => a.date<b.date?1:-1).forEach(n => html += noteCard(n));
+    });
+  } else {
+    const groups = {};
+    songNotes.forEach(n => { (groups[n.date]=groups[n.date]||[]).push(n); });
+    Object.keys(groups).sort().reverse().forEach(d => {
+      html += `<div class="group-header">${formatDate(d)}</div>`;
+      groups[d].sort((a,b) => measureStart(a.measure)-measureStart(b.measure)).forEach(n => html += noteCard(n));
+    });
+  }
+  container.innerHTML = html;
+}
+
+function noteCard(n) {
+  const footer = n.resolved
+    ? `<span class="resolved-badge">✓ Resolved</span>`
+    : `<button class="resolve-btn" onclick="resolveNote('${n.id}')">Mark resolved</button>`;
+  return `<div class="note-card" data-part="${n.part}" id="note-${n.id}">
+    <div class="note-card-top">
+      <span class="part-badge ${n.part}">${n.part}</span>
+      ${n.measure ? `<span class="measure-badge">m.${n.measure}</span>` : ''}
+      <div class="priority-dot ${n.priority}" title="${n.priority} priority"></div>
+      <span class="tag-badge">${n.tag}</span>
+    </div>
+    <div class="note-text">${n.note}</div>
+    <div class="note-footer">
+      <span class="note-date">${formatDate(n.date)}</span>
+      ${footer}
+    </div>
+  </div>`;
+}
+
+// ── Resolve ───────────────────────────────────────────────────────────────
+async function resolveNote(id) {
+  const note = notes.find(n => String(n.id) === String(id));
+  if (!note) return;
+  note.resolved = true;
+  renderNotes();
+  try {
+    await apiCall({ action: 'resolve', id });
+    showToast('Marked as resolved ✓');
+  } catch(e) {
+    note.resolved = false;
+    renderNotes();
+    showToast('Could not save — try again', '#c96b6b');
+  }
+}
+
+// ── Add Note ──────────────────────────────────────────────────────────────
+function populateSongDatalist() {
+  document.getElementById('song-datalist').innerHTML =
+    [...new Set(notes.map(n => n.song))].sort().map(s => `<option value="${s}">`).join('');
+}
+
+async function submitNote() {
+  const song     = document.getElementById('f-song').value.trim();
+  const measure  = document.getElementById('f-measure').value.trim();
+  const date     = document.getElementById('f-date').value;
+  const part     = document.getElementById('f-part').value;
+  const priority = document.getElementById('f-priority').value;
+  const tag      = document.getElementById('f-tag').value;
+  const noteText = document.getElementById('f-note').value.trim();
+
+  if (!song || !noteText || !date) {
+    showError('form-error', 'Please fill in Song, Date, and Note.');
+    return;
+  }
+
+  const newNote = { id: Date.now(), song, measure, date, part, priority, tag, note: noteText, resolved: false };
+  const btn = document.getElementById('submit-btn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  try {
+    await apiCall({ action: 'add', note: JSON.stringify(newNote) });
+    notes.unshift(newNote);
+    document.getElementById('f-song').value    = '';
+    document.getElementById('f-measure').value = '';
+    document.getElementById('f-note').value    = '';
+    showToast('Note saved ✓');
+    currentSong = song;
+    openSong(song);
+  } catch(e) {
+    showError('form-error', 'Could not save. Check your connection and try again.');
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${+day}, ${y}`;
+}
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color||'var(--lead)';
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2400);
+}
+function showError(id, msg) {
+  const el = document.getElementById(id); el.textContent = msg; el.classList.add('show');
+}
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+
+loadNotes();
+</script>
+</body>
+</html>
