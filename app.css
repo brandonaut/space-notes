@@ -393,11 +393,9 @@ body {
   padding-top: 2px;
 }
 .note-row-body {
-  flex: 1;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text);
-  min-width: 0;
 }
 .note-row-body .part-badge {
   font-size: 10px;
@@ -420,7 +418,6 @@ body {
   flex-shrink: 0;
   display: flex;
   gap: 4px;
-  padding-top: 2px;
   opacity: 0;
   transition: opacity 0.15s;
 }
