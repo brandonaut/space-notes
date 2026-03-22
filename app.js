@@ -368,9 +368,9 @@ function noteRow(n) {
 		.map((p) => `<span class="part-badge ${p}">${p}</span>`)
 		.join("");
 	const tagLabels = n.tags
-		.map((t) => `<span class="note-tag">${t}</span>`)
+		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
 		.join("");
-	return `<div class="note-row${resolvedClass}" data-part="${n.parts[0] || ""}" id="note-${n.id}">
+	return `<div class="note-row${resolvedClass}" id="note-${n.id}">
     <span class="note-row-prefix">${prefix}</span>
     <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
     <div class="note-row-actions">

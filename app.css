@@ -13,6 +13,10 @@
   --bass: #c96b6b;
   --all: #a07ec9;
   --multi: #5bbfb5;
+  --tag-singing: #e08a70;
+  --tag-performance: #a07ec9;
+  --tag-musicality: #5bbfb5;
+  --tag-other: #8a9ab5;
   --radius: 12px;
   --radius-sm: 8px;
 }
@@ -356,10 +360,25 @@ body {
   background: rgba(91, 191, 181, 0.12);
   border-color: var(--multi);
 }
-.chip[data-tag].active {
-  color: var(--accent);
-  background: rgba(201, 168, 76, 0.12);
-  border-color: var(--accent);
+.chip[data-tag="Singing"].active {
+  color: var(--tag-singing);
+  background: rgba(224, 138, 112, 0.12);
+  border-color: var(--tag-singing);
+}
+.chip[data-tag="Performance"].active {
+  color: var(--tag-performance);
+  background: rgba(160, 126, 201, 0.12);
+  border-color: var(--tag-performance);
+}
+.chip[data-tag="Musicality"].active {
+  color: var(--tag-musicality);
+  background: rgba(91, 191, 181, 0.12);
+  border-color: var(--tag-musicality);
+}
+.chip[data-tag="Other"].active {
+  color: var(--tag-other);
+  background: rgba(138, 154, 181, 0.12);
+  border-color: var(--tag-other);
 }
 
 .group-header {
@@ -381,11 +400,6 @@ body {
   border-bottom: 1px solid var(--border);
   border-left: 2px solid transparent;
 }
-.note-row[data-part="Tenor"] { border-left-color: var(--tenor); }
-.note-row[data-part="Lead"] { border-left-color: var(--lead); }
-.note-row[data-part="Baritone"] { border-left-color: var(--bari); }
-.note-row[data-part="Bass"] { border-left-color: var(--bass); }
-.note-row[data-part="Multiple"] { border-left-color: var(--multi); }
 .note-row.editing {
   display: block;
   padding: 12px 0 12px 10px;
@@ -411,9 +425,29 @@ body {
 }
 .note-tag {
   font-size: 10px;
-  color: var(--muted);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 20px;
   margin-left: 4px;
   vertical-align: middle;
+  color: var(--muted);
+  background: var(--surface2);
+}
+.note-tag.Singing {
+  color: var(--tag-singing);
+  background: rgba(224, 138, 112, 0.15);
+}
+.note-tag.Performance {
+  color: var(--tag-performance);
+  background: rgba(160, 126, 201, 0.15);
+}
+.note-tag.Musicality {
+  color: var(--tag-musicality);
+  background: rgba(91, 191, 181, 0.15);
+}
+.note-tag.Other {
+  color: var(--tag-other);
+  background: rgba(138, 154, 181, 0.15);
 }
 .note-row-resolved .note-row-body {
   opacity: 0.4;
