@@ -299,24 +299,19 @@ function renderNotes() {
 
 	let html = "";
 	if (currentView === "measure") {
-		const groups = {};
-		for (const n of songNotes) {
-			const k = n.measure || "General";
-			if (!groups[k]) groups[k] = [];
-			groups[k].push(n);
+		const byMeasure = (a, b) =>
+			(a.measure ? measureStart(a.measure) : -1) -
+				(b.measure ? measureStart(b.measure) : -1) ||
+			(a.date < b.date ? 1 : -1);
+		const open = songNotes.filter((n) => !n.resolved).sort(byMeasure);
+		const archived = songNotes.filter((n) => n.resolved).sort(byMeasure);
+		if (open.length) {
+			html += `<div class="group-header">Active</div>`;
+			for (const n of open) html += noteRow(n);
 		}
-		const sorted = Object.keys(groups).sort(
-			(a, b) => measureStart(a) - measureStart(b),
-		);
-		if (groups.General) {
-			sorted.splice(sorted.indexOf("General"), 1);
-			sorted.unshift("General");
-		}
-		for (const m of sorted) {
-			html += `<div class="group-header">${m === "General" ? "General" : `Measure ${m}`}</div>`;
-			for (const n of groups[m].sort((a, b) => (a.date < b.date ? 1 : -1))) {
-				html += noteRow(n);
-			}
+		if (archived.length) {
+			html += `<div class="group-header">Archived</div>`;
+			for (const n of archived) html += noteRow(n);
 		}
 	} else {
 		const groups = {};
