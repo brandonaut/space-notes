@@ -248,15 +248,7 @@ function renderTagChips() {
 	const present = new Set(
 		notes.filter((n) => n.song === currentSong).map((n) => n.tag),
 	);
-	const order = [
-		"Pitch",
-		"Diction",
-		"Dynamics",
-		"Rhythm",
-		"Expression",
-		"Blend",
-		"General",
-	];
+	const order = ["Singing", "Performance", "Musicality", "Other"];
 	const tags = order.filter((t) => present.has(t));
 	const container = document.getElementById("tag-chips");
 	if (tags.length < 2) {
@@ -446,15 +438,7 @@ function editNote(id) {
 	if (!card) return;
 	card.classList.add("editing");
 	const parts = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
-	const tags = [
-		"Pitch",
-		"Diction",
-		"Dynamics",
-		"Rhythm",
-		"Expression",
-		"Blend",
-		"General",
-	];
+	const tags = ["Singing", "Performance", "Musicality", "Other"];
 	card.innerHTML = `
     <div class="edit-form">
       <div class="field-row">
