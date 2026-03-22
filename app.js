@@ -309,12 +309,12 @@ function renderNotes() {
 		`${songNotes.length} note${songNotes.length !== 1 ? "s" : ""} · ${open} open`;
 
 	if (activeFilters.size > 0)
-		songNotes = songNotes.filter((n) =>
-			n.parts.some((p) => activeFilters.has(p)),
+		songNotes = songNotes.filter(
+			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
 		);
 	if (activeTagFilters.size > 0)
-		songNotes = songNotes.filter((n) =>
-			n.tags.some((t) => activeTagFilters.has(t)),
+		songNotes = songNotes.filter(
+			(n) => n.tags.length === 0 || n.tags.some((t) => activeTagFilters.has(t)),
 		);
 
 	const container = document.getElementById("detail-notes");
@@ -405,9 +405,13 @@ async function resolveNote(id, resolved) {
 function copyNotes() {
 	let open = notes.filter((n) => n.song === currentSong && !n.resolved);
 	if (activeFilters.size > 0)
-		open = open.filter((n) => n.parts.some((p) => activeFilters.has(p)));
+		open = open.filter(
+			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
+		);
 	if (activeTagFilters.size > 0)
-		open = open.filter((n) => n.tags.some((t) => activeTagFilters.has(t)));
+		open = open.filter(
+			(n) => n.tags.length === 0 || n.tags.some((t) => activeTagFilters.has(t)),
+		);
 	if (!open.length) {
 		showToast("No open notes to copy", "#7a7585");
 		return;
