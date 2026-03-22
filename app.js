@@ -513,6 +513,24 @@ function toggleChip(el) {
 	el.classList.toggle("active");
 }
 
+function toggleSectionChip(el) {
+	const group = el.closest(".chip-group");
+	const allChip = group.querySelector('[data-part="All"]');
+	if (el === allChip) {
+		for (const chip of group.querySelectorAll(".chip"))
+			chip.classList.remove("active");
+		allChip.classList.add("active");
+	} else {
+		if (allChip.classList.contains("active"))
+			allChip.classList.remove("active");
+		el.classList.toggle("active");
+		const anySelected = [
+			...group.querySelectorAll(".chip:not([data-part='All'])"),
+		].some((c) => c.classList.contains("active"));
+		if (!anySelected) allChip.classList.add("active");
+	}
+}
+
 function editNote(id) {
 	const note = notes.find((n) => String(n.id) === String(id));
 	if (!note) return;
@@ -521,10 +539,14 @@ function editNote(id) {
 	card.classList.add("editing");
 	const PARTS = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
 	const TAGS = ["Singing", "Performance", "Musicality", "Other"];
-	const partChips = PARTS.map(
-		(p) =>
-			`<div class="chip ${note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleChip(this)">${p}</div>`,
-	).join("");
+	const allActive = note.parts.length === 0;
+	const allChip = `<div class="chip ${allActive ? "active" : ""}" data-part="All" onclick="toggleSectionChip(this)">All</div>`;
+	const partChips =
+		allChip +
+		PARTS.map(
+			(p) =>
+				`<div class="chip ${!allActive && note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleSectionChip(this)">${p}</div>`,
+		).join("");
 	const tagChips = TAGS.map(
 		(t) =>
 			`<div class="chip ${note.tags.includes(t) ? "active" : ""}" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
@@ -566,9 +588,16 @@ async function saveEdit(id) {
 
 	const measure = document.getElementById(`ef-measure-${id}`).value.trim();
 	const date = document.getElementById(`ef-date-${id}`).value;
-	const parts = Array.from(
-		document.querySelectorAll(`#ef-parts-${id} .chip.active`),
-	).map((el) => el.textContent.trim());
+	const allChipActive = document
+		.querySelector(`#ef-parts-${id} [data-part="All"]`)
+		?.classList.contains("active");
+	const parts = allChipActive
+		? []
+		: Array.from(
+				document.querySelectorAll(
+					`#ef-parts-${id} .chip.active:not([data-part="All"])`,
+				),
+			).map((el) => el.textContent.trim());
 	const tags = Array.from(
 		document.querySelectorAll(`#ef-tags-${id} .chip.active`),
 	).map((el) => el.textContent.trim());
@@ -633,9 +662,16 @@ async function submitNote() {
 	const song = document.getElementById("f-song").value.trim();
 	const measure = document.getElementById("f-measure").value.trim();
 	const date = document.getElementById("f-date").value;
-	const parts = Array.from(
-		document.querySelectorAll("#f-parts .chip.active"),
-	).map((el) => el.textContent.trim());
+	const fAllActive = document
+		.querySelector('#f-parts [data-part="All"]')
+		?.classList.contains("active");
+	const parts = fAllActive
+		? []
+		: Array.from(
+				document.querySelectorAll(
+					'#f-parts .chip.active:not([data-part="All"])',
+				),
+			).map((el) => el.textContent.trim());
 	const tags = Array.from(
 		document.querySelectorAll("#f-tags .chip.active"),
 	).map((el) => el.textContent.trim());
