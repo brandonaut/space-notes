@@ -441,6 +441,10 @@ body {
   color: var(--text);
   border-color: var(--muted);
 }
+.note-action-btn.danger:hover {
+  color: var(--bass);
+  border-color: var(--bass);
+}
 
 .part-badge {
   font-size: 11px;

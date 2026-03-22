@@ -3,6 +3,7 @@ const CLIENT_ID =
 	"582732782667-7nkuge3mspe5p1q0p7t52omjndiuir3s.apps.googleusercontent.com";
 const SHEET_ID = "1V2SNY3C8Pd5Jw5ozg6fQAAp_ndPuw8X7IH5V7RQYvC0";
 const SHEET_NAME = "Sheet1";
+const SHEET_GID = 0;
 const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
 let notes = [];
@@ -350,6 +351,7 @@ function noteRow(n) {
     <div class="note-row-actions">
       ${action}
       <button class="note-action-btn" onclick="editNote('${n.id}')">Edit</button>
+      <button class="note-action-btn danger" onclick="deleteNote('${n.id}')">Delete</button>
     </div>
   </div>`;
 }
@@ -428,6 +430,53 @@ function copyNotes() {
 		.writeText(text.trim())
 		.then(() => showToast("Copied to clipboard ✓"))
 		.catch(() => showToast("Could not copy", "#c96b6b"));
+}
+
+// ── Delete Note ───────────────────────────────────────────────────────────
+async function deleteNote(id) {
+	const note = notes.find((n) => String(n.id) === String(id));
+	if (!note) return;
+	if (!confirm("Delete this note permanently?")) return;
+	try {
+		const token = await getToken();
+		const res = await fetch(`${BASE}:batchUpdate`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				requests: [
+					{
+						deleteDimension: {
+							range: {
+								sheetId: SHEET_GID,
+								dimension: "ROWS",
+								startIndex: note._row - 1,
+								endIndex: note._row,
+							},
+						},
+					},
+				],
+			}),
+		});
+		if (res.status === 401) {
+			accessToken = null;
+			sessionStorage.removeItem("sn_token");
+			throw new Error("auth");
+		}
+		if (!res.ok) throw new Error("delete failed");
+		const idx = notes.indexOf(note);
+		notes.splice(idx, 1);
+		for (const n of notes) if (n._row > note._row) n._row--;
+		renderFilterChips();
+		renderTagChips();
+		renderNotes();
+		showToast("Note deleted");
+	} catch (e) {
+		if (e.message !== "auth")
+			showToast("Could not delete — try again", "#c96b6b");
+	}
 }
 
 // ── Edit Note ─────────────────────────────────────────────────────────────
