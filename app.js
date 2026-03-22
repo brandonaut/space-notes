@@ -9,6 +9,7 @@ let notes = [];
 let currentSong = null;
 let currentView = "measure";
 let activeFilter = "All";
+let activeTagFilter = "All";
 let accessToken = null;
 let tokenClient;
 let pendingAuth = null;
@@ -194,11 +195,13 @@ function renderSongList() {
 function openSong(song) {
 	currentSong = song;
 	activeFilter = "All";
+	activeTagFilter = "All";
 	currentView = "measure";
 	document.getElementById("detail-song-name").textContent = song;
 	document.getElementById("btn-measure").classList.add("active");
 	document.getElementById("btn-chron").classList.remove("active");
 	renderFilterChips();
+	renderTagChips();
 	renderNotes();
 	document.getElementById("screen-songs").classList.remove("active");
 	document.getElementById("screen-detail").classList.add("active");
@@ -223,6 +226,39 @@ function renderFilterChips() {
 function setFilter(part) {
 	activeFilter = part;
 	renderFilterChips();
+	renderNotes();
+}
+
+function renderTagChips() {
+	const present = new Set(
+		notes.filter((n) => n.song === currentSong).map((n) => n.tag),
+	);
+	const order = [
+		"Pitch",
+		"Diction",
+		"Dynamics",
+		"Rhythm",
+		"Expression",
+		"Blend",
+		"General",
+	];
+	const tags = order.filter((t) => present.has(t));
+	const container = document.getElementById("tag-chips");
+	if (tags.length < 2) {
+		container.innerHTML = "";
+		return;
+	}
+	container.innerHTML = ["All", ...tags]
+		.map(
+			(t) =>
+				`<div class="chip ${activeTagFilter === t ? "active tag-active" : ""}" data-tag="${t}" onclick="setTagFilter('${t}')">${t}</div>`,
+		)
+		.join("");
+}
+
+function setTagFilter(tag) {
+	activeTagFilter = tag;
+	renderTagChips();
 	renderNotes();
 }
 
@@ -251,6 +287,8 @@ function renderNotes() {
 
 	if (activeFilter !== "All")
 		songNotes = songNotes.filter((n) => n.part === activeFilter);
+	if (activeTagFilter !== "All")
+		songNotes = songNotes.filter((n) => n.tag === activeTagFilter);
 
 	const container = document.getElementById("detail-notes");
 	if (!songNotes.length) {
@@ -322,7 +360,7 @@ async function resolveNote(id, resolved) {
 	renderNotes();
 	try {
 		await updateCell(
-			`${SHEET_NAME}!I${note._row}`,
+			`${SHEET_NAME}!H${note._row}`,
 			resolved ? "true" : "false",
 		);
 		showToast(resolved ? "Marked as resolved ✓" : "Reopened");
@@ -336,7 +374,11 @@ async function resolveNote(id, resolved) {
 
 // ── Copy to clipboard ─────────────────────────────────────────────────────
 function copyNotes() {
-	const open = notes.filter((n) => n.song === currentSong && !n.resolved);
+	let open = notes.filter((n) => n.song === currentSong && !n.resolved);
+	if (activeFilter !== "All")
+		open = open.filter((n) => n.part === activeFilter);
+	if (activeTagFilter !== "All")
+		open = open.filter((n) => n.tag === activeTagFilter);
 	if (!open.length) {
 		showToast("No open notes to copy", "#7a7585");
 		return;
@@ -470,7 +512,6 @@ async function saveEdit(id) {
 			measure,
 			date,
 			part,
-			note.priority,
 			tag,
 			noteText,
 			note.resolved ? "true" : "false",
@@ -526,17 +567,7 @@ async function submitNote() {
 	btn.disabled = true;
 
 	try {
-		await appendRow([
-			id,
-			song,
-			measure,
-			date,
-			part,
-			"",
-			tag,
-			noteText,
-			"false",
-		]);
+		await appendRow([id, song, measure, date, part, tag, noteText, "false"]);
 		notes.push(newNote);
 		document.getElementById("f-song").value = "";
 		document.getElementById("f-measure").value = "";
