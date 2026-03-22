@@ -77,22 +77,22 @@
       </div>
       <div class="field">
         <label>Section</label>
-        <select id="f-part">
-          <option value="Tenor">Tenor</option>
-          <option value="Lead">Lead</option>
-          <option value="Baritone">Baritone</option>
-          <option value="Bass">Bass</option>
-          <option value="Multiple">Multiple</option>
-        </select>
+        <div class="chip-group" id="f-parts">
+          <div class="chip" data-part="Tenor" onclick="toggleChip(this)">Tenor</div>
+          <div class="chip" data-part="Lead" onclick="toggleChip(this)">Lead</div>
+          <div class="chip" data-part="Baritone" onclick="toggleChip(this)">Baritone</div>
+          <div class="chip" data-part="Bass" onclick="toggleChip(this)">Bass</div>
+          <div class="chip" data-part="Multiple" onclick="toggleChip(this)">Multiple</div>
+        </div>
       </div>
       <div class="field">
         <label>Tag</label>
-        <select id="f-tag">
-          <option>Singing</option>
-          <option>Performance</option>
-          <option>Musicality</option>
-          <option>Other</option>
-        </select>
+        <div class="chip-group" id="f-tags">
+          <div class="chip" data-tag="Singing" onclick="toggleChip(this)">Singing</div>
+          <div class="chip" data-tag="Performance" onclick="toggleChip(this)">Performance</div>
+          <div class="chip" data-tag="Musicality" onclick="toggleChip(this)">Musicality</div>
+          <div class="chip" data-tag="Other" onclick="toggleChip(this)">Other</div>
+        </div>
       </div>
       <div class="field">
         <label>Note</label>

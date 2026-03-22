@@ -304,6 +304,12 @@ body {
 .filter-row::-webkit-scrollbar {
   display: none;
 }
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .chip {
   flex-shrink: 0;
   padding: 5px 12px;

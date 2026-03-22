@@ -9,8 +9,8 @@ const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 let notes = [];
 let currentSong = null;
 let currentView = "measure";
-let activeFilter = "All";
-let activeTagFilter = "All";
+let activeFilters = new Set();
+let activeTagFilters = new Set();
 let accessToken = null;
 let tokenClient;
 let pendingAuth = null;
@@ -78,6 +78,14 @@ async function loadNotes() {
 			});
 			obj._row = i + 2;
 			obj.resolved = obj.archive === "true" || obj.archive === true;
+			obj.parts = (obj.part || "")
+				.split(",")
+				.map((s) => s.trim())
+				.filter(Boolean);
+			obj.tags = (obj.tag || "")
+				.split(",")
+				.map((s) => s.trim())
+				.filter(Boolean);
 			return obj;
 		});
 		renderSongList();
@@ -210,8 +218,8 @@ function renderSongList() {
 
 function openSong(song) {
 	currentSong = song;
-	activeFilter = "All";
-	activeTagFilter = "All";
+	activeFilters = new Set();
+	activeTagFilters = new Set();
 	currentView = "measure";
 	document.getElementById("detail-song-name").textContent = song;
 	document.getElementById("btn-measure").classList.add("active");
@@ -227,27 +235,33 @@ function openSong(song) {
 // ── Chips ─────────────────────────────────────────────────────────────────
 function renderFilterChips() {
 	const present = new Set(
-		notes.filter((n) => n.song === currentSong).map((n) => n.part),
+		notes.filter((n) => n.song === currentSong).flatMap((n) => n.parts),
 	);
-	const all = ["All", "Tenor", "Lead", "Baritone", "Bass", "Multiple"];
-	const chips = all.filter((p) => p === "All" || present.has(p));
-	document.getElementById("filter-chips").innerHTML = chips
+	const order = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
+	const chips = order.filter((p) => present.has(p));
+	const container = document.getElementById("filter-chips");
+	if (chips.length < 2) {
+		container.innerHTML = "";
+		return;
+	}
+	container.innerHTML = chips
 		.map(
 			(p) =>
-				`<div class="chip ${activeFilter === p ? "active" : ""}" data-part="${p}" onclick="setFilter('${p}')">${p}</div>`,
+				`<div class="chip ${activeFilters.has(p) ? "active" : ""}" data-part="${p}" onclick="setFilter('${p}')">${p}</div>`,
 		)
 		.join("");
 }
 
 function setFilter(part) {
-	activeFilter = part;
+	if (activeFilters.has(part)) activeFilters.delete(part);
+	else activeFilters.add(part);
 	renderFilterChips();
 	renderNotes();
 }
 
 function renderTagChips() {
 	const present = new Set(
-		notes.filter((n) => n.song === currentSong).map((n) => n.tag),
+		notes.filter((n) => n.song === currentSong).flatMap((n) => n.tags),
 	);
 	const order = ["Singing", "Performance", "Musicality", "Other"];
 	const tags = order.filter((t) => present.has(t));
@@ -256,16 +270,17 @@ function renderTagChips() {
 		container.innerHTML = "";
 		return;
 	}
-	container.innerHTML = ["All", ...tags]
+	container.innerHTML = tags
 		.map(
 			(t) =>
-				`<div class="chip ${activeTagFilter === t ? "active tag-active" : ""}" data-tag="${t}" onclick="setTagFilter('${t}')">${t}</div>`,
+				`<div class="chip ${activeTagFilters.has(t) ? "active" : ""}" data-tag="${t}" onclick="setTagFilter('${t}')">${t}</div>`,
 		)
 		.join("");
 }
 
 function setTagFilter(tag) {
-	activeTagFilter = tag;
+	if (activeTagFilters.has(tag)) activeTagFilters.delete(tag);
+	else activeTagFilters.add(tag);
 	renderTagChips();
 	renderNotes();
 }
@@ -293,10 +308,14 @@ function renderNotes() {
 	document.getElementById("detail-note-count").textContent =
 		`${songNotes.length} note${songNotes.length !== 1 ? "s" : ""} · ${open} open`;
 
-	if (activeFilter !== "All")
-		songNotes = songNotes.filter((n) => n.part === activeFilter);
-	if (activeTagFilter !== "All")
-		songNotes = songNotes.filter((n) => n.tag === activeTagFilter);
+	if (activeFilters.size > 0)
+		songNotes = songNotes.filter((n) =>
+			n.parts.some((p) => activeFilters.has(p)),
+		);
+	if (activeTagFilters.size > 0)
+		songNotes = songNotes.filter((n) =>
+			n.tags.some((t) => activeTagFilters.has(t)),
+		);
 
 	const container = document.getElementById("detail-notes");
 	if (!songNotes.length) {
@@ -345,9 +364,15 @@ function noteRow(n) {
 	const action = n.resolved
 		? `<button class="note-action-btn" onclick="resolveNote('${n.id}', false)">Unarchive</button>`
 		: `<button class="note-action-btn" onclick="resolveNote('${n.id}', true)">Archive</button>`;
-	return `<div class="note-row${resolvedClass}" data-part="${n.part}" id="note-${n.id}">
+	const partBadges = n.parts
+		.map((p) => `<span class="part-badge ${p}">${p}</span>`)
+		.join("");
+	const tagLabels = n.tags
+		.map((t) => `<span class="note-tag">${t}</span>`)
+		.join("");
+	return `<div class="note-row${resolvedClass}" data-part="${n.parts[0] || ""}" id="note-${n.id}">
     <span class="note-row-prefix">${prefix}</span>
-    <span class="note-row-body">${n.note}<span class="part-badge ${n.part}">${n.part}</span><span class="note-tag">${n.tag}</span></span>
+    <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
     <div class="note-row-actions">
       ${action}
       <button class="note-action-btn" onclick="editNote('${n.id}')">Edit</button>
@@ -379,10 +404,10 @@ async function resolveNote(id, resolved) {
 // ── Copy to clipboard ─────────────────────────────────────────────────────
 function copyNotes() {
 	let open = notes.filter((n) => n.song === currentSong && !n.resolved);
-	if (activeFilter !== "All")
-		open = open.filter((n) => n.part === activeFilter);
-	if (activeTagFilter !== "All")
-		open = open.filter((n) => n.tag === activeTagFilter);
+	if (activeFilters.size > 0)
+		open = open.filter((n) => n.parts.some((p) => activeFilters.has(p)));
+	if (activeTagFilters.size > 0)
+		open = open.filter((n) => n.tags.some((t) => activeTagFilters.has(t)));
 	if (!open.length) {
 		showToast("No open notes to copy", "#7a7585");
 		return;
@@ -390,8 +415,8 @@ function copyNotes() {
 
 	const fmt = (n) => {
 		const prefix = n.measure ? `m.${n.measure} ` : "";
-		const meta = [n.part, n.tag].filter(Boolean).join(", ");
-		return `- ${prefix}(${meta}) ${n.note}`;
+		const meta = [...n.parts, ...n.tags].filter(Boolean).join(", ");
+		return `- ${prefix}${meta ? `(${meta}) ` : ""}${n.note}`;
 	};
 
 	let text = `*${currentSong}*\n`;
@@ -480,14 +505,26 @@ async function deleteNote(id) {
 }
 
 // ── Edit Note ─────────────────────────────────────────────────────────────
+function toggleChip(el) {
+	el.classList.toggle("active");
+}
+
 function editNote(id) {
 	const note = notes.find((n) => String(n.id) === String(id));
 	if (!note) return;
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
 	card.classList.add("editing");
-	const parts = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
-	const tags = ["Singing", "Performance", "Musicality", "Other"];
+	const PARTS = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
+	const TAGS = ["Singing", "Performance", "Musicality", "Other"];
+	const partChips = PARTS.map(
+		(p) =>
+			`<div class="chip ${note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleChip(this)">${p}</div>`,
+	).join("");
+	const tagChips = TAGS.map(
+		(t) =>
+			`<div class="chip ${note.tags.includes(t) ? "active" : ""}" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
+	).join("");
 	card.innerHTML = `
     <div class="edit-form">
       <div class="field-row">
@@ -502,15 +539,11 @@ function editNote(id) {
       </div>
       <div class="field">
         <label>Section</label>
-        <select id="ef-part-${id}">
-          ${parts.map((p) => `<option ${note.part === p ? "selected" : ""}>${p}</option>`).join("")}
-        </select>
+        <div class="chip-group" id="ef-parts-${id}">${partChips}</div>
       </div>
       <div class="field">
         <label>Tag</label>
-        <select id="ef-tag-${id}">
-          ${tags.map((t) => `<option ${note.tag === t ? "selected" : ""}>${t}</option>`).join("")}
-        </select>
+        <div class="chip-group" id="ef-tags-${id}">${tagChips}</div>
       </div>
       <div class="field">
         <label>Note</label>
@@ -529,8 +562,12 @@ async function saveEdit(id) {
 
 	const measure = document.getElementById(`ef-measure-${id}`).value.trim();
 	const date = document.getElementById(`ef-date-${id}`).value;
-	const part = document.getElementById(`ef-part-${id}`).value;
-	const tag = document.getElementById(`ef-tag-${id}`).value;
+	const parts = Array.from(
+		document.querySelectorAll(`#ef-parts-${id} .chip.active`),
+	).map((el) => el.textContent.trim());
+	const tags = Array.from(
+		document.querySelectorAll(`#ef-tags-${id} .chip.active`),
+	).map((el) => el.textContent.trim());
 	const noteText = document.getElementById(`ef-note-${id}`).value.trim();
 
 	if (!noteText || !date) {
@@ -542,11 +579,17 @@ async function saveEdit(id) {
 	btn.disabled = true;
 	btn.textContent = "Saving…";
 
-	const prev = { ...note };
+	const prev = {
+		parts: note.parts,
+		tags: note.tags,
+		measure: note.measure,
+		date: note.date,
+		note: note.note,
+	};
+	note.parts = parts;
+	note.tags = tags;
 	note.measure = measure;
 	note.date = date;
-	note.part = part;
-	note.tag = tag;
 	note.note = noteText;
 
 	try {
@@ -555,12 +598,13 @@ async function saveEdit(id) {
 			note.song,
 			measure,
 			date,
-			part,
-			tag,
+			parts.join(","),
+			tags.join(","),
 			noteText,
 			note.resolved ? "true" : "false",
 		]);
 		renderFilterChips();
+		renderTagChips();
 		renderNotes();
 		showToast("Note updated ✓");
 	} catch (e) {
@@ -585,8 +629,12 @@ async function submitNote() {
 	const song = document.getElementById("f-song").value.trim();
 	const measure = document.getElementById("f-measure").value.trim();
 	const date = document.getElementById("f-date").value;
-	const part = document.getElementById("f-part").value;
-	const tag = document.getElementById("f-tag").value;
+	const parts = Array.from(
+		document.querySelectorAll("#f-parts .chip.active"),
+	).map((el) => el.textContent.trim());
+	const tags = Array.from(
+		document.querySelectorAll("#f-tags .chip.active"),
+	).map((el) => el.textContent.trim());
 	const noteText = document.getElementById("f-note").value.trim();
 
 	if (!song || !noteText || !date) {
@@ -600,8 +648,8 @@ async function submitNote() {
 		song,
 		measure,
 		date,
-		part,
-		tag,
+		parts,
+		tags,
 		note: noteText,
 		resolved: false,
 		_row: notes.length + 2,
@@ -611,11 +659,22 @@ async function submitNote() {
 	btn.disabled = true;
 
 	try {
-		await appendRow([id, song, measure, date, part, tag, noteText, "false"]);
+		await appendRow([
+			id,
+			song,
+			measure,
+			date,
+			parts.join(","),
+			tags.join(","),
+			noteText,
+			"false",
+		]);
 		notes.push(newNote);
 		document.getElementById("f-song").value = "";
 		document.getElementById("f-measure").value = "";
 		document.getElementById("f-note").value = "";
+		for (const el of document.querySelectorAll("#f-parts .chip, #f-tags .chip"))
+			el.classList.remove("active");
 		showToast("Note saved ✓");
 		currentSong = song;
 		openSong(song);
