@@ -34,6 +34,7 @@ function initAuth() {
 					expiresAt: Date.now() + (resp.expires_in - 60) * 1000,
 				}),
 			);
+			updateAuthUI();
 			const cb = pendingAuth;
 			pendingAuth = null;
 			if (cb) cb();
@@ -44,6 +45,30 @@ function initAuth() {
 		const stored = JSON.parse(sessionStorage.getItem("sn_token"));
 		if (stored?.expiresAt > Date.now()) accessToken = stored.token;
 	} catch (_) {}
+}
+
+function updateAuthUI() {
+	const el = document.getElementById("header-actions");
+	if (accessToken) {
+		el.innerHTML = `
+			<button class="header-btn-muted" onclick="signOut()">Sign Out</button>
+			<button class="header-btn" onclick="showScreen('add')">+ Add Note</button>`;
+	} else {
+		el.innerHTML = `<button class="header-btn" onclick="signIn()">Sign In</button>`;
+	}
+	if (document.getElementById("screen-detail").classList.contains("active")) {
+		renderNotes();
+	}
+}
+
+function signIn() {
+	tokenClient.requestAccessToken({ prompt: "select_account" });
+}
+
+function signOut() {
+	accessToken = null;
+	sessionStorage.removeItem("sn_token");
+	updateAuthUI();
 }
 
 function getToken() {
@@ -370,14 +395,17 @@ function noteRow(n) {
 	const tagLabels = n.tags
 		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
 		.join("");
-	return `<div class="note-row${resolvedClass}" id="note-${n.id}" onclick="selectNote(this)">
-    <span class="note-row-prefix">${prefix}</span>
-    <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
-    <div class="note-row-actions">
+	const actionsHtml = accessToken
+		? `<div class="note-row-actions">
       ${action}
       <button class="note-action-btn" onclick="event.stopPropagation();editNote('${n.id}')">Edit</button>
       <button class="note-action-btn danger" onclick="event.stopPropagation();deleteNote('${n.id}')">Delete</button>
-    </div>
+    </div>`
+		: "";
+	return `<div class="note-row${resolvedClass}" id="note-${n.id}" ${accessToken ? 'onclick="selectNote(this)"' : ""}>
+    <span class="note-row-prefix">${prefix}</span>
+    <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
+    ${actionsHtml}
   </div>`;
 }
 
@@ -771,4 +799,5 @@ function hideError(id) {
 }
 
 initAuth();
+updateAuthUI();
 loadNotes();
