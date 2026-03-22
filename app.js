@@ -580,7 +580,7 @@ function editNote(id) {
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
 	card.classList.add("editing");
-	const PARTS = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
+	const PARTS = ["Tenor", "Lead", "Baritone", "Bass"];
 	const TAGS = ["Singing", "Performance", "Musicality", "Other"];
 	const allActive = note.parts.length === 0;
 	const allChip = `<div class="chip ${allActive ? "active" : ""}" data-part="All" onclick="toggleSectionChip(this)">All</div>`;

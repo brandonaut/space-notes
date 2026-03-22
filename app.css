@@ -12,7 +12,7 @@
   --bari: #c9a84c;
   --bass: #c96b6b;
   --all: #a07ec9;
-  --multi: #5bbfb5;
+
   --tag-singing: #e08a70;
   --tag-performance: #a07ec9;
   --tag-musicality: #5bbfb5;
@@ -376,11 +376,7 @@ body {
   background: rgba(201, 107, 107, 0.12);
   border-color: var(--bass);
 }
-.chip[data-part="Multiple"].active {
-  color: var(--multi);
-  background: rgba(91, 191, 181, 0.12);
-  border-color: var(--multi);
-}
+
 .chip[data-tag="Singing"].active {
   color: var(--tag-singing);
   background: rgba(224, 138, 112, 0.12);
@@ -539,10 +535,7 @@ body {
   color: var(--all);
   background: rgba(160, 126, 201, 0.15);
 }
-.part-badge.Multiple {
-  color: var(--multi);
-  background: rgba(91, 191, 181, 0.15);
-}
+
 
 
 /* Form */
