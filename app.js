@@ -310,7 +310,7 @@ function renderNotes() {
 		)) {
 			html += `<div class="group-header">Measure ${m}</div>`;
 			for (const n of groups[m].sort((a, b) => (a.date < b.date ? 1 : -1))) {
-				html += noteCard(n);
+				html += noteRow(n);
 			}
 		}
 	} else {
@@ -324,30 +324,25 @@ function renderNotes() {
 			for (const n of groups[d].sort(
 				(a, b) => measureStart(a.measure) - measureStart(b.measure),
 			)) {
-				html += noteCard(n);
+				html += noteRow(n);
 			}
 		}
 	}
 	container.innerHTML = html;
 }
 
-function noteCard(n) {
-	const status = n.resolved
-		? `<button class="resolved-badge" onclick="resolveNote('${n.id}', false)">✓ Resolved</button>`
-		: `<button class="resolve-btn" onclick="resolveNote('${n.id}', true)">Mark resolved</button>`;
-	return `<div class="note-card" data-part="${n.part}" id="note-${n.id}">
-    <div class="note-card-top">
-      <span class="part-badge ${n.part}">${n.part}</span>
-      ${n.measure ? `<span class="measure-badge">m.${n.measure}</span>` : ""}
-      <span class="tag-badge">${n.tag}</span>
-    </div>
-    <div class="note-text">${n.note}</div>
-    <div class="note-footer">
-      <span class="note-date">${formatDate(n.date)}</span>
-      <div class="note-actions">
-        ${status}
-        <button class="edit-btn" onclick="editNote('${n.id}')">Edit</button>
-      </div>
+function noteRow(n) {
+	const prefix = n.measure ? `m.${n.measure}` : "";
+	const resolvedClass = n.resolved ? " note-row-resolved" : "";
+	const action = n.resolved
+		? `<button class="note-action-btn" onclick="resolveNote('${n.id}', false)">Reopen</button>`
+		: `<button class="note-action-btn" onclick="resolveNote('${n.id}', true)">Resolve</button>`;
+	return `<div class="note-row${resolvedClass}" data-part="${n.part}" id="note-${n.id}">
+    <span class="note-row-prefix">${prefix}</span>
+    <span class="note-row-body">${n.note}<span class="part-badge ${n.part}">${n.part}</span><span class="note-tag">${n.tag}</span></span>
+    <div class="note-row-actions">
+      ${action}
+      <button class="note-action-btn" onclick="editNote('${n.id}')">Edit</button>
     </div>
   </div>`;
 }
@@ -434,6 +429,7 @@ function editNote(id) {
 	if (!note) return;
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
+	card.classList.add("editing");
 	const parts = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
 	const tags = [
 		"Pitch",
