@@ -399,6 +399,8 @@ body {
   padding: 8px 0 8px 10px;
   border-bottom: 1px solid var(--border);
   border-left: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
 .note-row.editing {
   display: block;
@@ -443,15 +445,29 @@ body {
   text-decoration: line-through;
   text-decoration-color: rgba(122, 117, 133, 0.6);
 }
+.note-row {
+  cursor: pointer;
+}
 .note-row-actions {
-  flex-shrink: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
+  align-items: center;
   gap: 4px;
+  padding: 0 8px 0 24px;
+  background: linear-gradient(to right, transparent, var(--bg) 30%);
   opacity: 0;
   transition: opacity 0.15s;
 }
-.note-row:hover .note-row-actions {
+.note-row:hover .note-row-actions,
+.note-row.selected .note-row-actions {
   opacity: 1;
+}
+.note-row.selected {
+  border-left-color: var(--accent-dim);
+  background: rgba(201, 168, 76, 0.04);
 }
 .note-action-btn {
   font-size: 11px;

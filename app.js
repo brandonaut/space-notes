@@ -362,24 +362,39 @@ function noteRow(n) {
 	const prefix = n.measure ? `m.${n.measure}` : "";
 	const resolvedClass = n.resolved ? " note-row-resolved" : "";
 	const action = n.resolved
-		? `<button class="note-action-btn" onclick="resolveNote('${n.id}', false)">Unarchive</button>`
-		: `<button class="note-action-btn" onclick="resolveNote('${n.id}', true)">Archive</button>`;
+		? `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', false)">Unarchive</button>`
+		: `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', true)">Archive</button>`;
 	const partBadges = n.parts
 		.map((p) => `<span class="part-badge ${p}">${p}</span>`)
 		.join("");
 	const tagLabels = n.tags
 		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
 		.join("");
-	return `<div class="note-row${resolvedClass}" id="note-${n.id}">
+	return `<div class="note-row${resolvedClass}" id="note-${n.id}" onclick="selectNote(this)">
     <span class="note-row-prefix">${prefix}</span>
     <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
     <div class="note-row-actions">
       ${action}
-      <button class="note-action-btn" onclick="editNote('${n.id}')">Edit</button>
-      <button class="note-action-btn danger" onclick="deleteNote('${n.id}')">Delete</button>
+      <button class="note-action-btn" onclick="event.stopPropagation();editNote('${n.id}')">Edit</button>
+      <button class="note-action-btn danger" onclick="event.stopPropagation();deleteNote('${n.id}')">Delete</button>
     </div>
   </div>`;
 }
+
+// ── Note selection (mobile tap-to-reveal actions) ─────────────────────────
+function selectNote(el) {
+	const isSelected = el.classList.contains("selected");
+	for (const row of document.querySelectorAll(".note-row.selected"))
+		row.classList.remove("selected");
+	if (!isSelected) el.classList.add("selected");
+}
+
+document.addEventListener("click", (e) => {
+	if (!e.target.closest(".note-row")) {
+		for (const row of document.querySelectorAll(".note-row.selected"))
+			row.classList.remove("selected");
+	}
+});
 
 // ── Resolve ───────────────────────────────────────────────────────────────
 async function resolveNote(id, resolved) {
