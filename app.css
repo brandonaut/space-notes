@@ -428,27 +428,16 @@ body {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 20px;
+  border: 1px solid currentColor;
+  background: transparent;
   margin-left: 4px;
   vertical-align: middle;
   color: var(--muted);
-  background: var(--surface2);
 }
-.note-tag.Singing {
-  color: var(--tag-singing);
-  background: rgba(224, 138, 112, 0.15);
-}
-.note-tag.Performance {
-  color: var(--tag-performance);
-  background: rgba(160, 126, 201, 0.15);
-}
-.note-tag.Musicality {
-  color: var(--tag-musicality);
-  background: rgba(91, 191, 181, 0.15);
-}
-.note-tag.Other {
-  color: var(--tag-other);
-  background: rgba(138, 154, 181, 0.15);
-}
+.note-tag.Singing { color: var(--tag-singing); }
+.note-tag.Performance { color: var(--tag-performance); }
+.note-tag.Musicality { color: var(--tag-musicality); }
+.note-tag.Other { color: var(--tag-other); }
 .note-row-resolved .note-row-body {
   opacity: 0.4;
   text-decoration: line-through;
