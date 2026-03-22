@@ -64,7 +64,7 @@ async function loadNotes() {
 				obj[h] = r[j] ?? "";
 			});
 			obj._row = i + 2;
-			obj.resolved = obj.resolved === "true" || obj.resolved === true;
+			obj.resolved = obj.archive === "true" || obj.archive === true;
 			return obj;
 		});
 		renderSongList();
@@ -335,8 +335,8 @@ function noteRow(n) {
 	const prefix = n.measure ? `m.${n.measure}` : "";
 	const resolvedClass = n.resolved ? " note-row-resolved" : "";
 	const action = n.resolved
-		? `<button class="note-action-btn" onclick="resolveNote('${n.id}', false)">Reopen</button>`
-		: `<button class="note-action-btn" onclick="resolveNote('${n.id}', true)">Resolve</button>`;
+		? `<button class="note-action-btn" onclick="resolveNote('${n.id}', false)">Unarchive</button>`
+		: `<button class="note-action-btn" onclick="resolveNote('${n.id}', true)">Archive</button>`;
 	return `<div class="note-row${resolvedClass}" data-part="${n.part}" id="note-${n.id}">
     <span class="note-row-prefix">${prefix}</span>
     <span class="note-row-body">${n.note}<span class="part-badge ${n.part}">${n.part}</span><span class="note-tag">${n.tag}</span></span>
@@ -358,7 +358,7 @@ async function resolveNote(id, resolved) {
 			`${SHEET_NAME}!H${note._row}`,
 			resolved ? "true" : "false",
 		);
-		showToast(resolved ? "Marked as resolved ✓" : "Reopened");
+		showToast(resolved ? "Archived ✓" : "Unarchived");
 	} catch (e) {
 		note.resolved = !resolved;
 		renderNotes();
