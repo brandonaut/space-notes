@@ -26,11 +26,23 @@ function initAuth() {
 				return;
 			}
 			accessToken = resp.access_token;
+			sessionStorage.setItem(
+				"sn_token",
+				JSON.stringify({
+					token: resp.access_token,
+					expiresAt: Date.now() + (resp.expires_in - 60) * 1000,
+				}),
+			);
 			const cb = pendingAuth;
 			pendingAuth = null;
 			if (cb) cb();
 		},
 	});
+
+	try {
+		const stored = JSON.parse(sessionStorage.getItem("sn_token"));
+		if (stored?.expiresAt > Date.now()) accessToken = stored.token;
+	} catch (_) {}
 }
 
 function getToken() {
@@ -94,6 +106,7 @@ async function appendRow(values) {
 	);
 	if (res.status === 401) {
 		accessToken = null;
+		sessionStorage.removeItem("sn_token");
 		throw new Error("auth");
 	}
 	if (!res.ok) throw new Error("append failed");
@@ -115,6 +128,7 @@ async function updateRow(row, values) {
 	);
 	if (res.status === 401) {
 		accessToken = null;
+		sessionStorage.removeItem("sn_token");
 		throw new Error("auth");
 	}
 	if (!res.ok) throw new Error("update failed");
@@ -135,6 +149,7 @@ async function updateCell(a1, value) {
 	);
 	if (res.status === 401) {
 		accessToken = null;
+		sessionStorage.removeItem("sn_token");
 		throw new Error("auth");
 	}
 	if (!res.ok) throw new Error("update failed");
