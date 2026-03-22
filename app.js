@@ -305,10 +305,15 @@ function renderNotes() {
 			if (!groups[k]) groups[k] = [];
 			groups[k].push(n);
 		}
-		for (const m of Object.keys(groups).sort(
+		const sorted = Object.keys(groups).sort(
 			(a, b) => measureStart(a) - measureStart(b),
-		)) {
-			html += `<div class="group-header">Measure ${m}</div>`;
+		);
+		if (groups.General) {
+			sorted.splice(sorted.indexOf("General"), 1);
+			sorted.unshift("General");
+		}
+		for (const m of sorted) {
+			html += `<div class="group-header">${m === "General" ? "General" : `Measure ${m}`}</div>`;
 			for (const n of groups[m].sort((a, b) => (a.date < b.date ? 1 : -1))) {
 				html += noteRow(n);
 			}
