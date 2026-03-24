@@ -5,10 +5,12 @@
     "dev": "vite",
     "format": "biome format --write .",
     "lint": "biome lint .",
-    "check": "biome check --write ."
+    "check": "biome check --write .",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.1.1"
   }
 }

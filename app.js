@@ -1,3 +1,5 @@
+import { formatDate, measureStart } from "./utils.js";
+
 const API_KEY = "AIzaSyADfoNjABwUYbIk6nkgjaWCD1iuOI3qH4w";
 const CLIENT_ID =
 	"582732782667-7nkuge3mspe5p1q0p7t52omjndiuir3s.apps.googleusercontent.com";
@@ -373,11 +375,6 @@ function setView(v) {
 		.getElementById("btn-chron")
 		.classList.toggle("active", v === "chron");
 	renderNotes();
-}
-
-function measureStart(m) {
-	const n = Number.parseInt((m || "0").toString().replace(/[^0-9]/, ""));
-	return Number.isNaN(n) ? 9999 : n;
 }
 
 function renderNotes() {
@@ -850,12 +847,6 @@ async function submitNote() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-function formatDate(d) {
-	if (!d) return "";
-	const [y, m, day] = d.split("-");
-	return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m - 1]} ${+day}, ${y}`;
-}
-
 function showToast(msg, color) {
 	const t = document.getElementById("toast");
 	t.textContent = msg;
@@ -878,3 +869,25 @@ initAuth();
 updateAuthUI();
 loadConfig().then(renderFormChips);
 loadNotes();
+
+// Expose functions used in inline HTML event handlers
+Object.assign(window, {
+	signIn,
+	signOut,
+	loadNotes,
+	showScreen,
+	openSong,
+	setView,
+	setFilter,
+	setCategoryFilter,
+	toggleChip,
+	toggleSectionChip,
+	selectNote,
+	resolveNote,
+	copyNotes,
+	deleteNote,
+	editNote,
+	saveEdit,
+	renderNotes,
+	submitNote,
+});
