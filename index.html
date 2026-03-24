@@ -9,6 +9,7 @@
       rel="stylesheet"
     />
     <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://unpkg.com/lucide@0.511.0/dist/umd/lucide.min.js"></script>
     <link rel="stylesheet" href="app.css" />
   </head>
   <body>
@@ -29,7 +30,7 @@
     <div id="screen-songs" class="screen active screen-pad">
       <div class="songs-header">
         <div class="section-label">Songs</div>
-        <button class="refresh-btn" onclick="loadNotes()" title="Refresh">↻</button>
+        <button class="refresh-btn" onclick="loadNotes()" title="Refresh"><i data-lucide="rotate-cw"></i></button>
       </div>
       <div class="error-banner" id="list-error"></div>
       <div id="song-list"></div>
@@ -47,7 +48,7 @@
           <button id="btn-measure" class="active" onclick="setView('measure')">By Measure</button>
           <button id="btn-chron" onclick="setView('chron')">By Rehearsal</button>
         </div>
-        <button class="copy-btn" onclick="copyNotes()">Copy</button>
+        <button class="copy-btn" onclick="copyNotes()" title="Copy notes"><i data-lucide="clipboard-copy"></i></button>
       </div>
       <div class="filter-row" id="filter-chips"></div>
       <div class="filter-row" id="category-chips"></div>

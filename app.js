@@ -433,6 +433,7 @@ function renderNotes() {
 		}
 	}
 	container.innerHTML = html;
+	window.lucide?.createIcons();
 }
 
 function buildPartIndicator(parts) {
@@ -455,8 +456,8 @@ function noteRow(n) {
 	const prefix = n.measure ? `m.${n.measure}` : "";
 	const resolvedClass = n.resolved ? " note-row-resolved" : "";
 	const action = n.resolved
-		? `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', false)">Unarchive</button>`
-		: `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', true)">Archive</button>`;
+		? `<button class="note-action-btn" title="Unarchive" onclick="event.stopPropagation();resolveNote('${n.id}', false)"><i data-lucide="archive-restore"></i></button>`
+		: `<button class="note-action-btn" title="Archive" onclick="event.stopPropagation();resolveNote('${n.id}', true)"><i data-lucide="archive"></i></button>`;
 	const partInd = buildPartIndicator(n.parts);
 	const tagLabels = n.categories
 		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
@@ -464,8 +465,8 @@ function noteRow(n) {
 	const actionsHtml = accessToken
 		? `<div class="note-row-actions">
       ${action}
-      <button class="note-action-btn" onclick="event.stopPropagation();editNote('${n.id}')">Edit</button>
-      <button class="note-action-btn danger" onclick="event.stopPropagation();deleteNote('${n.id}')">Delete</button>
+      <button class="note-action-btn" title="Edit" onclick="event.stopPropagation();editNote('${n.id}')"><i data-lucide="pencil"></i></button>
+      <button class="note-action-btn danger" title="Delete" onclick="event.stopPropagation();deleteNote('${n.id}')"><i data-lucide="trash-2"></i></button>
     </div>`
 		: "";
 	return `<div class="note-row${resolvedClass}" id="note-${n.id}" ${accessToken ? 'onclick="selectNote(this)"' : ""}>
@@ -869,6 +870,7 @@ initAuth();
 updateAuthUI();
 loadConfig().then(renderFormChips);
 loadNotes();
+window.lucide?.createIcons();
 
 // Expose functions used in inline HTML event handlers
 Object.assign(window, {
