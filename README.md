@@ -41,7 +41,9 @@ Once deployed, **pin the URL in your Slack channel** so members always have it o
 Notes are stored directly in a Google Sheet via the Sheets API v4.
 Reading is anonymous (API key); writing requires signing in with a Google account.
 
-The sheet has these columns:
+The spreadsheet uses two sheets:
+
+### `Sheet1` — Notes
 
 | Column | Description |
 |--------|-------------|
@@ -49,11 +51,24 @@ The sheet has these columns:
 | `song` | Song name |
 | `measure` | Measure number(s), e.g. `32–36` |
 | `date` | Rehearsal date (YYYY-MM-DD) |
-| `part` | Voice part: Tenor / Lead / Baritone / Bass / Everyone / Multiple |
-| `priority` | High / Medium / Low |
-| `tag` | Note category (Pitch, Diction, etc.) |
+| `part` | Voice part(s), comma-separated (e.g. `Tenor,Lead`) |
+| `tag` | Note category, comma-separated |
 | `note` | Note text |
-| `resolved` | `true` or `false` |
+| `archive` | `true` or `false` |
+
+### `Config` — Available values
+
+A second sheet named `Config` controls the available options for sections, tags, and songs.
+Create it with a header row and one value per row in each column:
+
+| `sections` | `tags` | `songs` |
+|------------|--------|---------|
+| Tenor | Singing | Amazing Grace |
+| Lead | Performance | The Old Songs |
+| Baritone | Musicality | … |
+| Bass | Other | |
+
+If the `Config` sheet is missing or empty, the app falls back to built-in defaults.
 
 ---
 

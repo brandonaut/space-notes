@@ -3,10 +3,14 @@ const CLIENT_ID =
 	"582732782667-7nkuge3mspe5p1q0p7t52omjndiuir3s.apps.googleusercontent.com";
 const SHEET_ID = "1V2SNY3C8Pd5Jw5ozg6fQAAp_ndPuw8X7IH5V7RQYvC0";
 const SHEET_NAME = "Sheet1";
+const CONFIG_SHEET_NAME = "Config";
 const SHEET_GID = 0;
 const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
 let notes = [];
+let sections = ["Tenor", "Lead", "Baritone", "Bass"];
+let tags = ["Singing", "Performance", "Musicality", "Other"];
+let configSongs = [];
 let currentSong = null;
 let currentView = "measure";
 let activeFilters = new Set();
@@ -81,6 +85,53 @@ function getToken() {
 		pendingAuth = () => resolve(accessToken);
 		tokenClient.requestAccessToken({ prompt: "select_account" });
 	});
+}
+
+// ── Config (anonymous) ────────────────────────────────────────────────────
+async function loadConfig() {
+	try {
+		const res = await fetch(
+			`${BASE}/values/${CONFIG_SHEET_NAME}?key=${API_KEY}`,
+		);
+		if (!res.ok) return;
+		const { values = [] } = await res.json();
+		const [headers, ...rows] = values;
+		if (!headers) return;
+		const sIdx = headers.indexOf("sections");
+		const tIdx = headers.indexOf("tags");
+		const songIdx = headers.indexOf("songs");
+		if (sIdx >= 0) {
+			const s = rows.map((r) => r[sIdx]).filter(Boolean);
+			if (s.length) sections = s;
+		}
+		if (tIdx >= 0) {
+			const t = rows.map((r) => r[tIdx]).filter(Boolean);
+			if (t.length) tags = t;
+		}
+		if (songIdx >= 0) {
+			configSongs = rows.map((r) => r[songIdx]).filter(Boolean);
+		}
+	} catch (_) {}
+}
+
+function renderFormChips() {
+	const partsContainer = document.getElementById("f-parts");
+	const allChip = `<div class="chip active" data-part="All" onclick="toggleSectionChip(this)">All</div>`;
+	const sectionChips = sections
+		.map(
+			(s) =>
+				`<div class="chip" data-part="${s}" onclick="toggleSectionChip(this)">${s}</div>`,
+		)
+		.join("");
+	partsContainer.innerHTML = allChip + sectionChips;
+
+	const tagsContainer = document.getElementById("f-tags");
+	tagsContainer.innerHTML = tags
+		.map(
+			(t) =>
+				`<div class="chip" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
+		)
+		.join("");
 }
 
 // ── Sheets read (anonymous) ───────────────────────────────────────────────
@@ -266,8 +317,7 @@ function renderFilterChips() {
 	const present = new Set(
 		notes.filter((n) => n.song === currentSong).flatMap((n) => n.parts),
 	);
-	const order = ["Tenor", "Lead", "Baritone", "Bass", "Multiple"];
-	const chips = order.filter((p) => present.has(p));
+	const chips = sections.filter((p) => present.has(p));
 	const container = document.getElementById("filter-chips");
 	if (chips.length < 2) {
 		container.innerHTML = "";
@@ -292,14 +342,13 @@ function renderTagChips() {
 	const present = new Set(
 		notes.filter((n) => n.song === currentSong).flatMap((n) => n.tags),
 	);
-	const order = ["Singing", "Performance", "Musicality", "Other"];
-	const tags = order.filter((t) => present.has(t));
 	const container = document.getElementById("tag-chips");
-	if (tags.length < 2) {
+	const activeTags = tags.filter((t) => present.has(t));
+	if (activeTags.length < 2) {
 		container.innerHTML = "";
 		return;
 	}
-	container.innerHTML = tags
+	container.innerHTML = activeTags
 		.map(
 			(t) =>
 				`<div class="chip ${activeTagFilters.has(t) ? "active" : ""}" data-tag="${t}" onclick="setTagFilter('${t}')">${t}</div>`,
@@ -598,20 +647,22 @@ function editNote(id) {
 	const card = document.getElementById(`note-${id}`);
 	if (!card) return;
 	card.classList.add("editing");
-	const PARTS = ["Tenor", "Lead", "Baritone", "Bass"];
-	const TAGS = ["Singing", "Performance", "Musicality", "Other"];
 	const allActive = note.parts.length === 0;
 	const allChip = `<div class="chip ${allActive ? "active" : ""}" data-part="All" onclick="toggleSectionChip(this)">All</div>`;
 	const partChips =
 		allChip +
-		PARTS.map(
-			(p) =>
-				`<div class="chip ${!allActive && note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleSectionChip(this)">${p}</div>`,
-		).join("");
-	const tagChips = TAGS.map(
-		(t) =>
-			`<div class="chip ${note.tags.includes(t) ? "active" : ""}" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
-	).join("");
+		sections
+			.map(
+				(p) =>
+					`<div class="chip ${!allActive && note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleSectionChip(this)">${p}</div>`,
+			)
+			.join("");
+	const tagChips = tags
+		.map(
+			(t) =>
+				`<div class="chip ${note.tags.includes(t) ? "active" : ""}" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
+		)
+		.join("");
 	card.innerHTML = `
     <div class="edit-form">
       <div class="field-row">
@@ -712,8 +763,9 @@ async function saveEdit(id) {
 // ── Add Note ──────────────────────────────────────────────────────────────
 function populateSongDatalist() {
 	document.getElementById("song-datalist").innerHTML = [
-		...new Set(notes.map((n) => n.song)),
+		...new Set([...configSongs, ...notes.map((n) => n.song)]),
 	]
+		.filter(Boolean)
 		.sort()
 		.map((s) => `<option value="${s}">`)
 		.join("");
@@ -818,4 +870,5 @@ function hideError(id) {
 
 initAuth();
 updateAuthUI();
+loadConfig().then(renderFormChips);
 loadNotes();
