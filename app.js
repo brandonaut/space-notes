@@ -8,7 +8,7 @@ const SHEET_GID = 0;
 const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
 let notes = [];
-let sections = ["Tenor", "Lead", "Baritone", "Bass"];
+let parts = ["Tenor", "Lead", "Baritone", "Bass"];
 let tags = ["Singing", "Performance", "Musicality", "Other"];
 let configSongs = [];
 let currentSong = null;
@@ -97,12 +97,12 @@ async function loadConfig() {
 		const { values = [] } = await res.json();
 		const [headers, ...rows] = values;
 		if (!headers) return;
-		const sIdx = headers.indexOf("sections");
+		const sIdx = headers.indexOf("parts");
 		const tIdx = headers.indexOf("tags");
 		const songIdx = headers.indexOf("songs");
 		if (sIdx >= 0) {
 			const s = rows.map((r) => r[sIdx]).filter(Boolean);
-			if (s.length) sections = s;
+			if (s.length) parts = s;
 		}
 		if (tIdx >= 0) {
 			const t = rows.map((r) => r[tIdx]).filter(Boolean);
@@ -117,7 +117,7 @@ async function loadConfig() {
 function renderFormChips() {
 	const partsContainer = document.getElementById("f-parts");
 	const allChip = `<div class="chip active" data-part="All" onclick="toggleSectionChip(this)">All</div>`;
-	const sectionChips = sections
+	const sectionChips = parts
 		.map(
 			(s) =>
 				`<div class="chip" data-part="${s}" onclick="toggleSectionChip(this)">${s}</div>`,
@@ -317,7 +317,7 @@ function renderFilterChips() {
 	const present = new Set(
 		notes.filter((n) => n.song === currentSong).flatMap((n) => n.parts),
 	);
-	const chips = sections.filter((p) => present.has(p));
+	const chips = parts.filter((p) => present.has(p));
 	const container = document.getElementById("filter-chips");
 	if (chips.length < 2) {
 		container.innerHTML = "";
@@ -651,7 +651,7 @@ function editNote(id) {
 	const allChip = `<div class="chip ${allActive ? "active" : ""}" data-part="All" onclick="toggleSectionChip(this)">All</div>`;
 	const partChips =
 		allChip +
-		sections
+		parts
 			.map(
 				(p) =>
 					`<div class="chip ${!allActive && note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleSectionChip(this)">${p}</div>`,
@@ -676,7 +676,7 @@ function editNote(id) {
         </div>
       </div>
       <div class="field">
-        <label>Section</label>
+        <label>Part</label>
         <div class="chip-group" id="ef-parts-${id}">${partChips}</div>
       </div>
       <div class="field">

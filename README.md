@@ -61,8 +61,8 @@ The spreadsheet uses two sheets:
 A second sheet named `Config` controls the available options for sections, tags, and songs.
 Create it with a header row and one value per row in each column:
 
-| `sections` | `tags` | `songs` |
-|------------|--------|---------|
+| `parts` | `tags` | `songs` |
+|---------|--------|---------|
 | Tenor | Singing | Amazing Grace |
 | Lead | Performance | The Old Songs |
 | Baritone | Musicality | … |
