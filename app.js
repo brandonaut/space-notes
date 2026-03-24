@@ -9,12 +9,12 @@ const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
 let notes = [];
 let parts = ["Tenor", "Lead", "Baritone", "Bass"];
-let tags = ["Singing", "Performance", "Musicality", "Other"];
+let categories = ["Singing", "Performance", "Musicality", "Other"];
 let configSongs = [];
 let currentSong = null;
 let currentView = "measure";
 let activeFilters = new Set();
-let activeTagFilters = new Set();
+let activeCategoryFilters = new Set();
 let accessToken = null;
 let tokenClient;
 let pendingAuth = null;
@@ -98,7 +98,7 @@ async function loadConfig() {
 		const [headers, ...rows] = values;
 		if (!headers) return;
 		const sIdx = headers.indexOf("parts");
-		const tIdx = headers.indexOf("tags");
+		const tIdx = headers.indexOf("categories");
 		const songIdx = headers.indexOf("songs");
 		if (sIdx >= 0) {
 			const s = rows.map((r) => r[sIdx]).filter(Boolean);
@@ -106,7 +106,7 @@ async function loadConfig() {
 		}
 		if (tIdx >= 0) {
 			const t = rows.map((r) => r[tIdx]).filter(Boolean);
-			if (t.length) tags = t;
+			if (t.length) categories = t;
 		}
 		if (songIdx >= 0) {
 			configSongs = rows.map((r) => r[songIdx]).filter(Boolean);
@@ -125,11 +125,11 @@ function renderFormChips() {
 		.join("");
 	partsContainer.innerHTML = allChip + sectionChips;
 
-	const tagsContainer = document.getElementById("f-tags");
-	tagsContainer.innerHTML = tags
+	const categoriesContainer = document.getElementById("f-categories");
+	categoriesContainer.innerHTML = categories
 		.map(
 			(t) =>
-				`<div class="chip" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
+				`<div class="chip" data-category="${t}" onclick="toggleChip(this)">${t}</div>`,
 		)
 		.join("");
 }
@@ -159,7 +159,7 @@ async function loadNotes() {
 				.split(",")
 				.map((s) => s.trim())
 				.filter(Boolean);
-			obj.tags = (obj.tag || "")
+			obj.categories = (obj.tag || "")
 				.split(",")
 				.map((s) => s.trim())
 				.filter(Boolean);
@@ -299,13 +299,13 @@ function renderSongList() {
 function openSong(song) {
 	currentSong = song;
 	activeFilters = new Set();
-	activeTagFilters = new Set();
+	activeCategoryFilters = new Set();
 	currentView = "measure";
 	document.getElementById("detail-song-name").textContent = song;
 	document.getElementById("btn-measure").classList.add("active");
 	document.getElementById("btn-chron").classList.remove("active");
 	renderFilterChips();
-	renderTagChips();
+	renderCategoryChips();
 	renderNotes();
 	document.getElementById("screen-songs").classList.remove("active");
 	document.getElementById("screen-detail").classList.add("active");
@@ -338,28 +338,28 @@ function setFilter(part) {
 	renderNotes();
 }
 
-function renderTagChips() {
+function renderCategoryChips() {
 	const present = new Set(
-		notes.filter((n) => n.song === currentSong).flatMap((n) => n.tags),
+		notes.filter((n) => n.song === currentSong).flatMap((n) => n.categories),
 	);
-	const container = document.getElementById("tag-chips");
-	const activeTags = tags.filter((t) => present.has(t));
-	if (activeTags.length < 2) {
+	const container = document.getElementById("category-chips");
+	const activeCategories = categories.filter((t) => present.has(t));
+	if (activeCategories.length < 2) {
 		container.innerHTML = "";
 		return;
 	}
-	container.innerHTML = activeTags
+	container.innerHTML = activeCategories
 		.map(
 			(t) =>
-				`<div class="chip ${activeTagFilters.has(t) ? "active" : ""}" data-tag="${t}" onclick="setTagFilter('${t}')">${t}</div>`,
+				`<div class="chip ${activeCategoryFilters.has(t) ? "active" : ""}" data-category="${t}" onclick="setCategoryFilter('${t}')">${t}</div>`,
 		)
 		.join("");
 }
 
-function setTagFilter(tag) {
-	if (activeTagFilters.has(tag)) activeTagFilters.delete(tag);
-	else activeTagFilters.add(tag);
-	renderTagChips();
+function setCategoryFilter(tag) {
+	if (activeCategoryFilters.has(tag)) activeCategoryFilters.delete(tag);
+	else activeCategoryFilters.add(tag);
+	renderCategoryChips();
 	renderNotes();
 }
 
@@ -390,9 +390,11 @@ function renderNotes() {
 		songNotes = songNotes.filter(
 			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
 		);
-	if (activeTagFilters.size > 0)
+	if (activeCategoryFilters.size > 0)
 		songNotes = songNotes.filter(
-			(n) => n.tags.length === 0 || n.tags.some((t) => activeTagFilters.has(t)),
+			(n) =>
+				n.categories.length === 0 ||
+				n.categories.some((t) => activeCategoryFilters.has(t)),
 		);
 
 	const container = document.getElementById("detail-notes");
@@ -459,7 +461,7 @@ function noteRow(n) {
 		? `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', false)">Unarchive</button>`
 		: `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', true)">Archive</button>`;
 	const partInd = buildPartIndicator(n.parts);
-	const tagLabels = n.tags
+	const tagLabels = n.categories
 		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
 		.join("");
 	const actionsHtml = accessToken
@@ -518,9 +520,11 @@ function copyNotes() {
 		open = open.filter(
 			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
 		);
-	if (activeTagFilters.size > 0)
+	if (activeCategoryFilters.size > 0)
 		open = open.filter(
-			(n) => n.tags.length === 0 || n.tags.some((t) => activeTagFilters.has(t)),
+			(n) =>
+				n.categories.length === 0 ||
+				n.categories.some((t) => activeCategoryFilters.has(t)),
 		);
 	if (!open.length) {
 		showToast("No open notes to copy", "#7a7585");
@@ -529,7 +533,7 @@ function copyNotes() {
 
 	const fmt = (n) => {
 		const prefix = n.measure ? `m.${n.measure} ` : "";
-		const meta = [...n.parts, ...n.tags].filter(Boolean).join(", ");
+		const meta = [...n.parts, ...n.categories].filter(Boolean).join(", ");
 		return `- ${prefix}${meta ? `(${meta}) ` : ""}${n.note}`;
 	};
 
@@ -609,7 +613,7 @@ async function deleteNote(id) {
 		notes.splice(idx, 1);
 		for (const n of notes) if (n._row > note._row) n._row--;
 		renderFilterChips();
-		renderTagChips();
+		renderCategoryChips();
 		renderNotes();
 		showToast("Note deleted");
 	} catch (e) {
@@ -657,10 +661,10 @@ function editNote(id) {
 					`<div class="chip ${!allActive && note.parts.includes(p) ? "active" : ""}" data-part="${p}" onclick="toggleSectionChip(this)">${p}</div>`,
 			)
 			.join("");
-	const tagChips = tags
+	const categoryChips = categories
 		.map(
 			(t) =>
-				`<div class="chip ${note.tags.includes(t) ? "active" : ""}" data-tag="${t}" onclick="toggleChip(this)">${t}</div>`,
+				`<div class="chip ${note.categories.includes(t) ? "active" : ""}" data-category="${t}" onclick="toggleChip(this)">${t}</div>`,
 		)
 		.join("");
 	card.innerHTML = `
@@ -680,8 +684,8 @@ function editNote(id) {
         <div class="chip-group" id="ef-parts-${id}">${partChips}</div>
       </div>
       <div class="field">
-        <label>Tag</label>
-        <div class="chip-group" id="ef-tags-${id}">${tagChips}</div>
+        <label>Category</label>
+        <div class="chip-group" id="ef-categories-${id}">${categoryChips}</div>
       </div>
       <div class="field">
         <label>Note</label>
@@ -710,8 +714,8 @@ async function saveEdit(id) {
 					`#ef-parts-${id} .chip.active:not([data-part="All"])`,
 				),
 			).map((el) => el.textContent.trim());
-	const tags = Array.from(
-		document.querySelectorAll(`#ef-tags-${id} .chip.active`),
+	const noteCategories = Array.from(
+		document.querySelectorAll(`#ef-categories-${id} .chip.active`),
 	).map((el) => el.textContent.trim());
 	const noteText = document.getElementById(`ef-note-${id}`).value.trim();
 
@@ -726,13 +730,13 @@ async function saveEdit(id) {
 
 	const prev = {
 		parts: note.parts,
-		tags: note.tags,
+		categories: note.categories,
 		measure: note.measure,
 		date: note.date,
 		note: note.note,
 	};
 	note.parts = parts;
-	note.tags = tags;
+	note.categories = noteCategories;
 	note.measure = measure;
 	note.date = date;
 	note.note = noteText;
@@ -744,12 +748,12 @@ async function saveEdit(id) {
 			measure,
 			date,
 			parts.join(","),
-			tags.join(","),
+			noteCategories.join(","),
 			noteText,
 			note.resolved ? "true" : "false",
 		]);
 		renderFilterChips();
-		renderTagChips();
+		renderCategoryChips();
 		renderNotes();
 		showToast("Note updated ✓");
 	} catch (e) {
@@ -785,8 +789,8 @@ async function submitNote() {
 					'#f-parts .chip.active:not([data-part="All"])',
 				),
 			).map((el) => el.textContent.trim());
-	const tags = Array.from(
-		document.querySelectorAll("#f-tags .chip.active"),
+	const noteCategories = Array.from(
+		document.querySelectorAll("#f-categories .chip.active"),
 	).map((el) => el.textContent.trim());
 	const noteText = document.getElementById("f-note").value.trim();
 
@@ -802,7 +806,7 @@ async function submitNote() {
 		measure,
 		date,
 		parts,
-		tags,
+		categories: noteCategories,
 		note: noteText,
 		resolved: false,
 		_row: notes.length + 2,
@@ -818,7 +822,7 @@ async function submitNote() {
 			measure,
 			date,
 			parts.join(","),
-			tags.join(","),
+			noteCategories.join(","),
 			noteText,
 			"false",
 		]);
@@ -826,7 +830,9 @@ async function submitNote() {
 		document.getElementById("f-song").value = "";
 		document.getElementById("f-measure").value = "";
 		document.getElementById("f-note").value = "";
-		for (const el of document.querySelectorAll("#f-parts .chip, #f-tags .chip"))
+		for (const el of document.querySelectorAll(
+			"#f-parts .chip, #f-categories .chip",
+		))
 			el.classList.remove("active");
 		showToast("Note saved ✓");
 		currentSong = song;

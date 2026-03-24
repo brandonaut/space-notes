@@ -10,7 +10,7 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 - **Song-first navigation** — pick a song, see all its notes at a glance
 - **Two views per song** — toggle between *By Measure* (cumulative song map) and *By Rehearsal* (reverse-chronological log)
 - **Section filter chips** — tap Tenor, Lead, Baritone, or Bass to narrow notes to your part
-- **Tag categories** — Singing, Performance, Musicality
+- **Category filter chips** — Singing, Performance, Musicality, Other
 - **Archive** — track which notes have been fixed
 - **Live Google Sheet backend** — all notes are stored in a shared spreadsheet; every device sees the same data in real time
 - **Refresh button** — pull new notes mid-session without reloading the page
@@ -52,7 +52,7 @@ The spreadsheet uses two sheets:
 | `measure` | Measure number(s), e.g. `32–36` |
 | `date` | Rehearsal date (YYYY-MM-DD) |
 | `part` | Voice part(s), comma-separated (e.g. `Tenor,Lead`) |
-| `tag` | Note category, comma-separated |
+| `tag` | Note categories, comma-separated |
 | `note` | Note text |
 | `archive` | `true` or `false` |
 
@@ -61,8 +61,8 @@ The spreadsheet uses two sheets:
 A second sheet named `Config` controls the available options for sections, tags, and songs.
 Create it with a header row and one value per row in each column:
 
-| `parts` | `tags` | `songs` |
-|---------|--------|---------|
+| `parts` | `categories` | `songs` |
+|---------|-------------|---------|
 | Tenor | Singing | Amazing Grace |
 | Lead | Performance | The Old Songs |
 | Baritone | Musicality | … |
