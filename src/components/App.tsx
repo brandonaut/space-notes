@@ -1,0 +1,132 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { initAuth } from "../lib/auth";
+import { DEFAULT_CATEGORIES, DEFAULT_PARTS } from "../lib/config";
+import { loadConfig, loadNotes } from "../lib/sheets";
+import type { Config, Note, Screen } from "../types";
+import { AddNote } from "./AddNote";
+import { Header } from "./Header";
+import { SongDetail } from "./SongDetail";
+import { SongList } from "./SongList";
+import { Toast } from "./Toast";
+
+interface ToastState {
+	msg: string;
+	color?: string;
+}
+
+export function App() {
+	const [notes, setNotes] = useState<Note[]>([]);
+	const [config, setConfig] = useState<Config>({
+		parts: DEFAULT_PARTS,
+		categories: DEFAULT_CATEGORIES,
+		songs: [],
+	});
+	const [screen, setScreen] = useState<Screen>("songs");
+	const [currentSong, setCurrentSong] = useState<string | null>(null);
+	const [accessToken, setAccessToken] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [listError, setListError] = useState<string | null>(null);
+	const [toast, setToast] = useState<ToastState | null>(null);
+	const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const showToast = useCallback((msg: string, color?: string) => {
+		setToast({ msg, color });
+		if (toastTimer.current) clearTimeout(toastTimer.current);
+		toastTimer.current = setTimeout(() => setToast(null), 2400);
+	}, []);
+
+	const fetchNotes = useCallback(async () => {
+		setIsLoading(true);
+		setListError(null);
+		try {
+			const loaded = await loadNotes();
+			setNotes(loaded);
+		} catch (_) {
+			setListError(
+				"Could not load notes. Check your connection and try refreshing.",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
+	useEffect(() => {
+		initAuth(setAccessToken);
+		loadConfig().then(setConfig);
+		fetchNotes();
+	}, [fetchNotes]);
+
+	const openSong = useCallback((song: string) => {
+		setCurrentSong(song);
+		setScreen("detail");
+		window.scrollTo(0, 0);
+	}, []);
+
+	const handleNoteAdded = useCallback(
+		(note: Note) => {
+			setNotes((prev) => [...prev, note]);
+			openSong(note.song);
+		},
+		[openSong],
+	);
+
+	return (
+		<>
+			{isLoading && (
+				<div className="loading-overlay">
+					<div className="spinner" />
+					<p>Loading notes…</p>
+				</div>
+			)}
+			<Header accessToken={accessToken} />
+
+			{screen === "songs" && (
+				<SongList
+					notes={notes}
+					configSongs={config.songs}
+					loading={isLoading}
+					error={listError}
+					onOpenSong={openSong}
+					onRefresh={fetchNotes}
+				/>
+			)}
+
+			{screen === "detail" && currentSong && (
+				<SongDetail
+					song={currentSong}
+					notes={notes}
+					parts={config.parts}
+					categories={config.categories}
+					accessToken={accessToken}
+					onBack={() => setScreen("songs")}
+					onOpenAdd={() => setScreen("add")}
+					onNotesChange={setNotes}
+					showToast={showToast}
+				/>
+			)}
+
+			{screen === "add" && (
+				<AddNote
+					parts={config.parts}
+					categories={config.categories}
+					notes={notes}
+					configSongs={config.songs}
+					initialSong={currentSong ?? ""}
+					onCancel={() =>
+						currentSong ? setScreen("detail") : setScreen("songs")
+					}
+					onSaved={handleNoteAdded}
+					showToast={showToast}
+				/>
+			)}
+
+			{screen !== "add" && accessToken && (
+				<button className="fab" type="button" onClick={() => setScreen("add")}>
+					+
+				</button>
+			)}
+
+			<Toast message={toast?.msg ?? null} color={toast?.color} />
+		</>
+	);
+}

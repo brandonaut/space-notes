@@ -9,97 +9,9 @@
       rel="stylesheet"
     />
     <script src="https://accounts.google.com/gsi/client"></script>
-    <script src="https://unpkg.com/lucide@0.511.0/dist/umd/lucide.min.js"></script>
-    <link rel="stylesheet" href="app.css" />
   </head>
   <body>
-    <div class="loading-overlay" id="loading-overlay">
-      <div class="spinner"></div>
-      <p>Loading notes…</p>
-    </div>
-
-    <header class="app-header">
-      <div>
-        <h1>🎵 Space Notes</h1>
-        <div class="subtitle">Rehearsal Log</div>
-      </div>
-      <div class="header-actions" id="header-actions"></div>
-    </header>
-
-    <!-- Song List -->
-    <div id="screen-songs" class="screen active screen-pad">
-      <div class="songs-header">
-        <div class="section-label">Songs</div>
-        <button class="refresh-btn" onclick="loadNotes()" title="Refresh"><i data-lucide="rotate-cw"></i></button>
-      </div>
-      <div class="error-banner" id="list-error"></div>
-      <div id="song-list"></div>
-    </div>
-
-    <!-- Song Detail -->
-    <div id="screen-detail" class="screen screen-pad">
-      <button class="back-btn" onclick="showScreen('songs')">← All Songs</button>
-      <div class="song-title-block">
-        <h2 id="detail-song-name"></h2>
-        <div id="detail-note-count" class="section-label"></div>
-      </div>
-      <div class="detail-toolbar">
-        <div class="view-toggle">
-          <button id="btn-measure" class="active" onclick="setView('measure')">By Measure</button>
-          <button id="btn-chron" onclick="setView('chron')">By Rehearsal</button>
-        </div>
-      </div>
-      <div class="filter-row" id="filter-chips"></div>
-      <div class="filter-row" id="category-chips"></div>
-      <div id="detail-notes"></div>
-    </div>
-
-    <!-- Add Note -->
-    <div id="screen-add" class="screen screen-pad">
-      <button class="back-btn" onclick="showScreen('songs')">← Cancel</button>
-      <div class="form-title">Add a Note</div>
-      <div class="error-banner" id="form-error"></div>
-
-      <div class="field">
-        <label>Song</label>
-        <input id="f-song" list="song-datalist" placeholder="Song name…" autocomplete="off" />
-        <datalist id="song-datalist"></datalist>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Measure(s)</label>
-          <input id="f-measure" placeholder="e.g. 32–36" />
-        </div>
-        <div class="field">
-          <label>Date</label>
-          <input id="f-date" type="date" />
-        </div>
-      </div>
-      <div class="field">
-        <label>Part</label>
-        <div class="chip-group" id="f-parts"></div>
-      </div>
-      <div class="field">
-        <label>Category</label>
-        <div class="chip-group" id="f-categories"></div>
-      </div>
-      <div class="field">
-        <label>Note</label>
-        <textarea
-          id="f-note"
-          placeholder="Describe the note from the director or section leader…"
-        ></textarea>
-      </div>
-      <button class="submit-btn" id="submit-btn" onclick="submitNote()">
-        <div class="btn-spinner"></div>
-        <span class="btn-text">Save Note</span>
-      </button>
-    </div>
-
-    <button class="fab hidden" id="fab-add" onclick="showScreen('add')">+</button>
-
-    <div class="toast" id="toast"></div>
-
-    <script type="module" src="app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

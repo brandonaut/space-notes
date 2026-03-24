@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"include": ["app.js"]
+		"include": ["src/**", "utils.js", "utils.test.js"]
 	},
 	"formatter": {
 		"enabled": true,
