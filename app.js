@@ -309,7 +309,8 @@ function openSong(song) {
 	renderFilterChips();
 	renderCategoryChips();
 	renderNotes();
-	document.getElementById("screen-songs").classList.remove("active");
+	for (const s of document.querySelectorAll(".screen"))
+		s.classList.remove("active");
 	document.getElementById("screen-detail").classList.add("active");
 	window.scrollTo(0, 0);
 }
