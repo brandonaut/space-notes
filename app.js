@@ -539,8 +539,13 @@ function copyGroup(groupKey) {
 
 	const fmt = (n) => {
 		const prefix = n.measure ? `m.${n.measure} ` : "";
-		const meta = [...n.parts, ...n.categories].filter(Boolean).join(", ");
-		return `- ${prefix}${meta ? `(${meta}) ` : ""}${n.note}`;
+		const partsMeta = n.parts.join(", ");
+		const catsMeta = n.categories.join(", ");
+		const suffix = [partsMeta, catsMeta]
+			.filter(Boolean)
+			.map((s) => `(${s})`)
+			.join(" ");
+		return `- ${prefix}${n.note}${suffix ? ` ${suffix}` : ""}`;
 	};
 
 	const sorted = [...groupNotes].sort(
