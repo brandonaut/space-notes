@@ -409,12 +409,14 @@ function renderNotes() {
 			(a.date < b.date ? 1 : -1);
 		const open = songNotes.filter((n) => !n.resolved).sort(byMeasure);
 		const archived = songNotes.filter((n) => n.resolved).sort(byMeasure);
+		const copyBtn = (key) =>
+			`<button class="group-copy-btn" title="Copy" onclick="copyGroup('${key}')"><i data-lucide="clipboard-copy"></i></button>`;
 		if (open.length) {
-			html += `<div class="group-header">Active</div>`;
+			html += `<div class="group-header"><span>Active</span>${copyBtn("active")}</div>`;
 			for (const n of open) html += noteRow(n);
 		}
 		if (archived.length) {
-			html += `<div class="group-header">Archived</div>`;
+			html += `<div class="group-header"><span>Archived</span>${copyBtn("archived")}</div>`;
 			for (const n of archived) html += noteRow(n);
 		}
 	} else {
@@ -424,7 +426,7 @@ function renderNotes() {
 			groups[n.date].push(n);
 		}
 		for (const d of Object.keys(groups).sort().reverse()) {
-			html += `<div class="group-header">${formatDate(d)}</div>`;
+			html += `<div class="group-header"><span>${formatDate(d)}</span>${copyBtn(d)}</div>`;
 			for (const n of groups[d].sort(
 				(a, b) => measureStart(a.measure) - measureStart(b.measure),
 			)) {
@@ -512,20 +514,26 @@ async function resolveNote(id, resolved) {
 }
 
 // ── Copy to clipboard ─────────────────────────────────────────────────────
-function copyNotes() {
-	let open = notes.filter((n) => n.song === currentSong && !n.resolved);
+function copyGroup(groupKey) {
+	let groupNotes = notes.filter((n) => n.song === currentSong);
 	if (activeFilters.size > 0)
-		open = open.filter(
+		groupNotes = groupNotes.filter(
 			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
 		);
 	if (activeCategoryFilters.size > 0)
-		open = open.filter(
+		groupNotes = groupNotes.filter(
 			(n) =>
 				n.categories.length === 0 ||
 				n.categories.some((t) => activeCategoryFilters.has(t)),
 		);
-	if (!open.length) {
-		showToast("No open notes to copy", "#7a7585");
+
+	if (groupKey === "active") groupNotes = groupNotes.filter((n) => !n.resolved);
+	else if (groupKey === "archived")
+		groupNotes = groupNotes.filter((n) => n.resolved);
+	else groupNotes = groupNotes.filter((n) => n.date === groupKey);
+
+	if (!groupNotes.length) {
+		showToast("No notes to copy", "#7a7585");
 		return;
 	}
 
@@ -535,41 +543,14 @@ function copyNotes() {
 		return `- ${prefix}${meta ? `(${meta}) ` : ""}${n.note}`;
 	};
 
-	let text = `*${currentSong}*\n`;
-
-	if (currentView === "measure") {
-		const groups = {};
-		for (const n of open) {
-			const k = n.measure || "";
-			if (!groups[k]) groups[k] = [];
-			groups[k].push(n);
-		}
-		for (const m of Object.keys(groups).sort(
-			(a, b) => measureStart(a) - measureStart(b),
-		)) {
-			for (const n of groups[m].sort((a, b) => (a.date < b.date ? 1 : -1))) {
-				text += `${fmt(n)}\n`;
-			}
-		}
-	} else {
-		const groups = {};
-		for (const n of open) {
-			if (!groups[n.date]) groups[n.date] = [];
-			groups[n.date].push(n);
-		}
-		for (const d of Object.keys(groups).sort().reverse()) {
-			text += `\n_${formatDate(d)}_\n`;
-			for (const n of groups[d].sort(
-				(a, b) => measureStart(a.measure) - measureStart(b.measure),
-			)) {
-				text += `${fmt(n)}\n`;
-			}
-		}
-	}
+	const sorted = [...groupNotes].sort(
+		(a, b) => measureStart(a.measure) - measureStart(b.measure),
+	);
+	const text = `*${currentSong}*\n${sorted.map(fmt).join("\n")}`;
 
 	navigator.clipboard
 		.writeText(text.trim())
-		.then(() => showToast("Copied to clipboard ✓"))
+		.then(() => showToast("Copied ✓"))
 		.catch(() => showToast("Could not copy", "#c96b6b"));
 }
 
@@ -886,7 +867,7 @@ Object.assign(window, {
 	toggleSectionChip,
 	selectNote,
 	resolveNote,
-	copyNotes,
+	copyGroup,
 	deleteNote,
 	editNote,
 	saveEdit,
