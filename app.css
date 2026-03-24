@@ -8,10 +8,9 @@
   --text: #e8e4da;
   --muted: #7a7585;
   --tenor: #5b9bd5;
-  --lead: #5bb87a;
-  --bari: #c9a84c;
-  --bass: #c96b6b;
-  --all: #a07ec9;
+  --lead: #e07b3c;
+  --bari: #b07fd4;
+  --bass: #5bbfb5;
 
   --tag-singing: #e08a70;
   --tag-performance: #a07ec9;
@@ -363,17 +362,17 @@ body {
 }
 .chip[data-part="Lead"].active {
   color: var(--lead);
-  background: rgba(91, 184, 122, 0.12);
+  background: rgba(224, 123, 60, 0.12);
   border-color: var(--lead);
 }
 .chip[data-part="Baritone"].active {
   color: var(--bari);
-  background: rgba(201, 168, 76, 0.12);
+  background: rgba(176, 127, 212, 0.12);
   border-color: var(--bari);
 }
 .chip[data-part="Bass"].active {
   color: var(--bass);
-  background: rgba(201, 107, 107, 0.12);
+  background: rgba(91, 191, 181, 0.12);
   border-color: var(--bass);
 }
 
@@ -436,12 +435,7 @@ body {
   line-height: 1.5;
   color: var(--text);
 }
-.note-row-body .part-badge {
-  font-size: 10px;
-  padding: 1px 6px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
+
 .note-tag {
   font-size: 10px;
   font-weight: 600;
@@ -504,37 +498,33 @@ body {
   border-color: var(--muted);
 }
 .note-action-btn.danger:hover {
-  color: var(--bass);
-  border-color: var(--bass);
+  color: #c96b6b;
+  border-color: #c96b6b;
 }
 
-.part-badge {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: 20px;
+.part-ind {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  vertical-align: middle;
+  margin-left: 8px;
+  background: var(--surface2);
+  border-radius: 5px;
+  padding: 2px 5px;
+  line-height: 1;
 }
-.part-badge.Tenor {
-  color: var(--tenor);
-  background: rgba(91, 155, 213, 0.15);
+.pi {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  opacity: 0.3;
+  padding: 0 2px;
 }
-.part-badge.Lead {
-  color: var(--lead);
-  background: rgba(91, 184, 122, 0.15);
-}
-.part-badge.Baritone {
-  color: var(--bari);
-  background: rgba(201, 168, 76, 0.15);
-}
-.part-badge.Bass {
-  color: var(--bass);
-  background: rgba(201, 107, 107, 0.15);
-}
-.part-badge.Everyone {
-  color: var(--all);
-  background: rgba(160, 126, 201, 0.15);
-}
+.pi.active { opacity: 1; }
+.pi.Tenor.active    { color: var(--tenor); }
+.pi.Lead.active     { color: var(--lead);  }
+.pi.Baritone.active { color: var(--bari);  }
+.pi.Bass.active     { color: var(--bass);  }
 
 
 
@@ -644,6 +634,34 @@ body {
 }
 .error-banner.show {
   display: block;
+}
+
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #0f0f13;
+  border: none;
+  font-size: 30px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.fab:active {
+  transform: scale(0.9);
+}
+.fab.hidden {
+  display: none;
 }
 
 .toast {

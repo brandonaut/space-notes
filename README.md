@@ -9,11 +9,9 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 
 - **Song-first navigation** — pick a song, see all its notes at a glance
 - **Two views per song** — toggle between *By Measure* (cumulative song map) and *By Rehearsal* (reverse-chronological log)
-- **Section filter chips** — tap Tenor, Lead, Baritone, Bass, or Everyone to narrow notes to your part
-- **Color-coded by voice part** — left-edge accent colors make notes scannable at a glance
-- **Priority indicators** — High / Medium / Low dots on each note
-- **Tag categories** — Pitch, Diction, Dynamics, Rhythm, Expression, Blend, General
-- **Mark as resolved** — track which notes have been fixed
+- **Section filter chips** — tap Tenor, Lead, Baritone, or Bass to narrow notes to your part
+- **Tag categories** — Singing, Performance, Musicality
+- **Archive** — track which notes have been fixed
 - **Live Google Sheet backend** — all notes are stored in a shared spreadsheet; every device sees the same data in real time
 - **Refresh button** — pull new notes mid-session without reloading the page
 

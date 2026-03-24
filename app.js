@@ -49,12 +49,13 @@ function initAuth() {
 
 function updateAuthUI() {
 	const el = document.getElementById("header-actions");
+	const fab = document.getElementById("fab-add");
 	if (accessToken) {
-		el.innerHTML = `
-			<button class="header-btn-muted" onclick="signOut()">Sign Out</button>
-			<button class="header-btn" onclick="showScreen('add')">+ Add Note</button>`;
+		el.innerHTML = `<button class="header-btn-muted" onclick="signOut()">Sign Out</button>`;
+		fab.classList.remove("hidden");
 	} else {
 		el.innerHTML = `<button class="header-btn" onclick="signIn()">Sign In</button>`;
+		fab.classList.add("hidden");
 	}
 	if (document.getElementById("screen-detail").classList.contains("active")) {
 		renderNotes();
@@ -201,6 +202,9 @@ function showScreen(name) {
 			],
 		)
 		.classList.add("active");
+	document
+		.getElementById("fab-add")
+		.classList.toggle("hidden", !accessToken || name === "add");
 	if (name === "songs") renderSongList();
 	if (name === "add") {
 		populateSongDatalist();
@@ -383,15 +387,29 @@ function renderNotes() {
 	container.innerHTML = html;
 }
 
+function buildPartIndicator(parts) {
+	const all = parts.length === 0;
+	const defs = [
+		{ key: "Tenor", label: "T" },
+		{ key: "Lead", label: "L" },
+		{ key: "Baritone", label: "Br" },
+		{ key: "Bass", label: "B" },
+	];
+	return `<span class="part-ind">${defs
+		.map(
+			({ key, label }) =>
+				`<span class="pi ${key}${all || parts.includes(key) ? " active" : ""}">${label}</span>`,
+		)
+		.join("")}</span>`;
+}
+
 function noteRow(n) {
 	const prefix = n.measure ? `m.${n.measure}` : "";
 	const resolvedClass = n.resolved ? " note-row-resolved" : "";
 	const action = n.resolved
 		? `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', false)">Unarchive</button>`
 		: `<button class="note-action-btn" onclick="event.stopPropagation();resolveNote('${n.id}', true)">Archive</button>`;
-	const partBadges = n.parts
-		.map((p) => `<span class="part-badge ${p}">${p}</span>`)
-		.join("");
+	const partInd = buildPartIndicator(n.parts);
 	const tagLabels = n.tags
 		.map((t) => `<span class="note-tag ${t}">${t}</span>`)
 		.join("");
@@ -404,7 +422,7 @@ function noteRow(n) {
 		: "";
 	return `<div class="note-row${resolvedClass}" id="note-${n.id}" ${accessToken ? 'onclick="selectNote(this)"' : ""}>
     <span class="note-row-prefix">${prefix}</span>
-    <span class="note-row-body">${n.note}${partBadges}${tagLabels}</span>
+    <span class="note-row-body">${n.note}${partInd}${tagLabels}</span>
     ${actionsHtml}
   </div>`;
 }
