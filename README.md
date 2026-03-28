@@ -27,10 +27,15 @@ Host the three files (`index.html`, `app.css`, `app.js`) anywhere that serves st
 2. Drag the folder onto the page
 3. Copy the generated URL
 
-### GitHub Pages
+### GitHub Pages (automated)
 
-1. Push to a repository with Pages enabled (**Settings → Pages**, source: `main` branch)
-2. Your URL will be `https://<username>.github.io/<repo>`
+1. Enable Pages in **Settings → Pages**, source: **GitHub Actions**
+2. Create and push a version tag:
+   ```bash
+   git tag v1.0.0 && git push origin v1.0.0
+   ```
+3. The workflow builds and publishes automatically
+4. Your URL: `https://<username>.github.io/<repo>`
 
 Once deployed, **pin the URL in your Slack channel** so members always have it one tap away.
 

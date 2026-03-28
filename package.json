@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "build": "vite build",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check --write .",
