@@ -752,3 +752,23 @@ body {
   color: var(--muted);
   font-size: 14px;
 }
+
+dialog.note-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: min(480px, calc(100vw - 40px));
+  max-height: 90vh;
+  overflow-y: auto;
+  color: var(--text);
+  outline: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+dialog.note-modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}

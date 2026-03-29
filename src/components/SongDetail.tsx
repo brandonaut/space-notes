@@ -5,9 +5,13 @@ import { getToken } from "../lib/auth";
 import { SHEET_NAME } from "../lib/config";
 import { appendRow, deleteNoteRow, updateCell, updateRow } from "../lib/sheets";
 import type { Note, View } from "../types";
+import type { NoteFields } from "./AddNote";
 import { AddNote } from "./AddNote";
 import { FilterChips } from "./FilterChips";
+import { Modal } from "./Modal";
 import { NoteRow } from "./NoteRow";
+
+type ModalState = null | { mode: "add" } | { mode: "edit"; note: Note };
 
 interface SongDetailProps {
 	song: string;
@@ -35,9 +39,8 @@ export function SongDetail({
 	const [activeCategoryFilters, setActiveCategoryFilters] = useState(
 		new Set<string>(),
 	);
-	const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 	const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-	const [isAdding, setIsAdding] = useState(false);
+	const [modalState, setModalState] = useState<ModalState>(null);
 
 	// Reset local state when the song changes
 	// biome-ignore lint/correctness/useExhaustiveDependencies: song is the intentional trigger
@@ -45,9 +48,8 @@ export function SongDetail({
 		setView("measure");
 		setActiveFilters(new Set());
 		setActiveCategoryFilters(new Set());
-		setEditingNoteId(null);
 		setSelectedNoteId(null);
-		setIsAdding(false);
+		setModalState(null);
 	}, [song]);
 
 	// Click-outside clears selection
@@ -131,17 +133,38 @@ export function SongDetail({
 		[notes, onNotesChange, showToast],
 	);
 
+	const handleCreate = useCallback(
+		async (fields: NoteFields) => {
+			const id = String(Date.now());
+			const newNote = {
+				id,
+				song,
+				...fields,
+				resolved: false,
+				_row: notes.length + 2,
+			};
+			await appendRow(
+				[
+					id,
+					song,
+					fields.measure,
+					fields.date,
+					fields.parts.join(","),
+					fields.categories.join(","),
+					fields.note,
+					"false",
+				],
+				getToken,
+			);
+			showToast("Note saved ✓");
+			onNotesChange((prev) => [...prev, newNote]);
+			setModalState(null);
+		},
+		[song, notes, onNotesChange, showToast],
+	);
+
 	const handleSaveEdit = useCallback(
-		async (
-			id: string,
-			fields: {
-				measure: string;
-				date: string;
-				parts: string[];
-				categories: string[];
-				note: string;
-			},
-		) => {
+		async (id: string, fields: NoteFields) => {
 			const note = notes.find((n) => n.id === id);
 			if (!note) return;
 			const updated = { ...note, ...fields };
@@ -161,7 +184,7 @@ export function SongDetail({
 					],
 					getToken,
 				);
-				setEditingNoteId(null);
+				setModalState(null);
 				showToast("Note updated ✓");
 			} catch (e) {
 				onNotesChange((prev) => prev.map((n) => (n.id === id ? note : n)));
@@ -276,17 +299,12 @@ export function SongDetail({
 			<NoteRow
 				key={n.id}
 				note={n}
-				isEditing={editingNoteId === n.id}
 				isSelected={selectedNoteId === n.id}
 				accessToken={accessToken}
-				parts={parts}
-				categories={categories}
 				onSelect={() =>
 					setSelectedNoteId(selectedNoteId === n.id ? null : n.id)
 				}
-				onEdit={() => setEditingNoteId(n.id)}
-				onCancelEdit={() => setEditingNoteId(null)}
-				onSaveEdit={handleSaveEdit}
+				onEdit={() => setModalState({ mode: "edit", note: n })}
 				onResolve={handleResolve}
 				onDelete={handleDelete}
 			/>
@@ -347,49 +365,36 @@ export function SongDetail({
 					/>
 				</div>
 			)}
-			{isAdding && (
-				<AddNote
-					parts={parts}
-					categories={categories}
-					onCancel={() => setIsAdding(false)}
-					onSubmit={async (fields) => {
-						const id = String(Date.now());
-						const newNote = {
-							id,
-							song,
-							...fields,
-							resolved: false,
-							_row: notes.length + 2,
-						};
-						await appendRow(
-							[
-								id,
-								song,
-								fields.measure,
-								fields.date,
-								fields.parts.join(","),
-								fields.categories.join(","),
-								fields.note,
-								"false",
-							],
-							getToken,
-						);
-						showToast("Note saved ✓");
-						onNotesChange((prev) => [...prev, newNote]);
-						setIsAdding(false);
-					}}
-				/>
-			)}
 			<div id="detail-notes">{renderGroups()}</div>
-			{accessToken && !isAdding && (
+			{accessToken && (
 				<button
 					className="fab"
 					type="button"
-					onClick={() => setIsAdding(true)}
+					onClick={() => setModalState({ mode: "add" })}
 					style={{ display: "block" }}
 				>
 					+
 				</button>
+			)}
+			{modalState !== null && (
+				<Modal
+					title={modalState.mode === "add" ? "Add a Note" : "Edit Note"}
+					onClose={() => setModalState(null)}
+				>
+					<AddNote
+						initialValues={
+							modalState.mode === "edit" ? modalState.note : undefined
+						}
+						parts={parts}
+						categories={categories}
+						onCancel={() => setModalState(null)}
+						onSubmit={
+							modalState.mode === "add"
+								? handleCreate
+								: (fields) => handleSaveEdit(modalState.note.id, fields)
+						}
+					/>
+				</Modal>
 			)}
 		</div>
 	);

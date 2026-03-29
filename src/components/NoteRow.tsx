@@ -1,27 +1,12 @@
 import { Archive, ArchiveRestore, Pencil, Trash2 } from "lucide-react";
 import type { Note } from "../types";
-import { AddNote } from "./AddNote";
 
 interface NoteRowProps {
 	note: Note;
-	isEditing: boolean;
 	isSelected: boolean;
 	accessToken: string | null;
-	parts: string[];
-	categories: string[];
 	onSelect: () => void;
 	onEdit: () => void;
-	onCancelEdit: () => void;
-	onSaveEdit: (
-		id: string,
-		fields: {
-			measure: string;
-			date: string;
-			parts: string[];
-			categories: string[];
-			note: string;
-		},
-	) => Promise<void>;
 	onResolve: (id: string, resolved: boolean) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
 }
@@ -50,32 +35,13 @@ function buildPartIndicator(parts: string[]) {
 
 export function NoteRow({
 	note,
-	isEditing,
 	isSelected,
 	accessToken,
-	parts,
-	categories,
 	onSelect,
 	onEdit,
-	onCancelEdit,
-	onSaveEdit,
 	onResolve,
 	onDelete,
 }: NoteRowProps) {
-	if (isEditing) {
-		return (
-			<div className="note-row editing" id={`note-${note.id}`}>
-				<AddNote
-					initialValues={note}
-					parts={parts}
-					categories={categories}
-					onCancel={onCancelEdit}
-					onSubmit={(fields) => onSaveEdit(note.id, fields)}
-				/>
-			</div>
-		);
-	}
-
 	const prefix = note.measure ? `m.${note.measure}` : "";
 
 	return (
