@@ -1,8 +1,10 @@
 import { Archive, ArchiveRestore, Pencil, Trash2 } from "lucide-react";
 import type { Note } from "../types";
+import { PartPill } from "./PartPill";
 
 interface NoteRowProps {
 	note: Note;
+	parts: string[];
 	isSelected: boolean;
 	accessToken: string | null;
 	onSelect: () => void;
@@ -11,30 +13,9 @@ interface NoteRowProps {
 	onDelete: (id: string) => Promise<void>;
 }
 
-function buildPartIndicator(parts: string[]) {
-	const all = parts.length === 0;
-	const defs = [
-		{ key: "Tenor", label: "T" },
-		{ key: "Lead", label: "L" },
-		{ key: "Baritone", label: "Br" },
-		{ key: "Bass", label: "B" },
-	];
-	return (
-		<span className="part-ind">
-			{defs.map(({ key, label }) => (
-				<span
-					key={key}
-					className={`pi ${key}${all || parts.includes(key) ? " active" : ""}`}
-				>
-					{label}
-				</span>
-			))}
-		</span>
-	);
-}
-
 export function NoteRow({
 	note,
+	parts,
 	isSelected,
 	accessToken,
 	onSelect,
@@ -57,13 +38,15 @@ export function NoteRow({
 		>
 			<span className="note-row-prefix">{prefix}</span>
 			<span className="note-row-body">
-				{note.note}
-				{buildPartIndicator(note.parts)}
-				{note.categories.map((t) => (
-					<span key={t} className={`note-tag ${t}`}>
-						{t}
-					</span>
-				))}
+				<span>{note.note}</span>
+				<span className="note-row-chips">
+					<PartPill parts={parts} selected={new Set(note.parts)} />
+					{note.categories.map((c) => (
+						<span key={c} className={`note-tag ${c}`}>
+							{c}
+						</span>
+					))}
+				</span>
 			</span>
 			{accessToken && (
 				<div className="note-row-actions">

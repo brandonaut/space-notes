@@ -10,6 +10,7 @@ import { AddNote } from "./AddNote";
 import { FilterChips } from "./FilterChips";
 import { Modal } from "./Modal";
 import { NoteRow } from "./NoteRow";
+import { PartPill } from "./PartPill";
 
 type ModalState = null | { mode: "add" } | { mode: "edit"; note: Note };
 
@@ -293,6 +294,7 @@ export function SongDetail({
 			<NoteRow
 				key={n.id}
 				note={n}
+				parts={parts}
 				isSelected={selectedNoteId === n.id}
 				accessToken={accessToken}
 				onSelect={() =>
@@ -339,12 +341,10 @@ export function SongDetail({
 			</div>
 			{parts.length >= 2 && (
 				<div className="filter-row" id="filter-chips">
-					<FilterChips
-						options={parts}
+					<PartPill
+						parts={parts}
 						selected={activeFilters}
 						onChange={setActiveFilters}
-						mode="filter"
-						dataAttr="data-part"
 					/>
 				</div>
 			)}

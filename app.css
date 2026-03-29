@@ -452,7 +452,60 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: var(--text);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
+.note-row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.part-pill {
+  display: inline-flex;
+  align-items: stretch;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.part-pill-seg {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  color: var(--muted);
+  opacity: 0.3;
+  border-right: 1px solid var(--border);
+  font-family: "DM Sans", sans-serif;
+  background: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  line-height: 1;
+}
+.part-pill-seg:last-child {
+  border-right: none;
+}
+.part-pill-seg.active {
+  opacity: 1;
+}
+button.part-pill-seg {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+button.part-pill-seg:hover {
+  opacity: 0.6;
+}
+button.part-pill-seg.active:hover {
+  opacity: 0.75;
+}
+.part-pill-seg.Tenor.active  { color: var(--tenor); }
+.part-pill-seg.Lead.active   { color: var(--lead);  }
+.part-pill-seg.Baritone.active { color: var(--bari); }
+.part-pill-seg.Bass.active   { color: var(--bass);  }
 
 .note-tag {
   font-size: 10px;
@@ -519,30 +572,6 @@ body {
   color: #c96b6b;
   border-color: #c96b6b;
 }
-
-.part-ind {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  vertical-align: middle;
-  margin-left: 8px;
-  background: var(--surface2);
-  border-radius: 5px;
-  padding: 2px 5px;
-  line-height: 1;
-}
-.pi {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--muted);
-  opacity: 0.3;
-  padding: 0 2px;
-}
-.pi.active { opacity: 1; }
-.pi.Tenor.active    { color: var(--tenor); }
-.pi.Lead.active     { color: var(--lead);  }
-.pi.Baritone.active { color: var(--bari);  }
-.pi.Bass.active     { color: var(--bass);  }
 
 
 

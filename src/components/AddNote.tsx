@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FilterChips } from "./FilterChips";
+import { PartPill } from "./PartPill";
 
 export interface NoteFields {
 	measure: string;
@@ -100,13 +101,7 @@ export function AddNote({
 			<div className="field">
 				{/* biome-ignore lint/a11y/noLabelWithoutControl: group label for chip set */}
 				<label>Part</label>
-				<FilterChips
-					options={parts}
-					selected={selParts}
-					onChange={setSelParts}
-					mode="section"
-					dataAttr="data-part"
-				/>
+				<PartPill parts={parts} selected={selParts} onChange={setSelParts} />
 			</div>
 			<div className="field">
 				{/* biome-ignore lint/a11y/noLabelWithoutControl: group label for chip set */}
