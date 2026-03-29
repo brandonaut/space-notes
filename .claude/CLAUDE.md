@@ -1,5 +1,7 @@
 # Instructions
 
-Run `bun run check` after every change
+After every change:
 
-Check `README.md` after every change to see if it needs updating with new features.
+- Run `bun run check`
+- Check SonarQube results and remediate issues
+- Check `README.md` to see if it needs updating with new features
