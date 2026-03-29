@@ -74,7 +74,7 @@ export function AddNote({
 					ref={textareaRef}
 					value={noteText}
 					onChange={(e) => setNoteText(e.target.value)}
-					placeholder="Describe the note from the director or section leader…"
+					placeholder="What's this note about?"
 				/>
 			</div>
 			<div className="field-row">
