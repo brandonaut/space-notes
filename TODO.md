@@ -1,7 +1,7 @@
 # TODO
 
 - Migrate to Tailwind
-- Rename "By Rehearsal" to "By Date"
+- Fix colors for category filters
 - Add date to copied text, if in Date mode
 - Rename "resolved" to "archive" in the code
 - Render markdown in note text, including newlines
@@ -19,3 +19,4 @@
 - Add client side routing, so that we can link to individual songs.
 - Make it a PWA
 - Create logo and favicon
+- Add About page with version, last update date, and GitHub link

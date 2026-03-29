@@ -335,7 +335,7 @@ export function SongDetail({
 						className={view === "chron" ? "active" : ""}
 						onClick={() => setView("chron")}
 					>
-						By Rehearsal
+						By Date
 					</button>
 				</div>
 			</div>
