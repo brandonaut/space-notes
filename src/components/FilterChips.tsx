@@ -69,13 +69,14 @@ export function FilterChips({
 		);
 	}
 
+	const allActive = selected.size === 0;
 	return (
 		<div className="chip-group">
 			{options.map((opt) => (
 				<button
 					key={opt}
 					type="button"
-					className={`chip${selected.has(opt) ? " active" : ""}`}
+					className={`chip${allActive || selected.has(opt) ? " active" : ""}`}
 					{...(dataAttr === "data-part"
 						? { "data-part": opt }
 						: { "data-category": opt })}

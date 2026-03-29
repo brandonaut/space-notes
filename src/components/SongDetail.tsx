@@ -64,12 +64,6 @@ export function SongDetail({
 	}, []);
 
 	const songNotes = notes.filter((n) => n.song === song);
-	const presentParts = new Set(songNotes.flatMap((n) => n.parts));
-	const presentCategories = new Set(songNotes.flatMap((n) => n.categories));
-
-	const visibleParts = parts.filter((p) => presentParts.has(p));
-	const visibleCategories = categories.filter((c) => presentCategories.has(c));
-
 	let filtered = songNotes;
 	if (activeFilters.size > 0)
 		filtered = filtered.filter(
@@ -343,10 +337,10 @@ export function SongDetail({
 					</button>
 				</div>
 			</div>
-			{visibleParts.length >= 2 && (
+			{parts.length >= 2 && (
 				<div className="filter-row" id="filter-chips">
 					<FilterChips
-						options={visibleParts}
+						options={parts}
 						selected={activeFilters}
 						onChange={setActiveFilters}
 						mode="filter"
@@ -354,10 +348,10 @@ export function SongDetail({
 					/>
 				</div>
 			)}
-			{visibleCategories.length >= 2 && (
+			{categories.length >= 2 && (
 				<div className="filter-row" id="category-chips">
 					<FilterChips
-						options={visibleCategories}
+						options={categories}
 						selected={activeCategoryFilters}
 						onChange={setActiveCategoryFilters}
 						mode="filter"
