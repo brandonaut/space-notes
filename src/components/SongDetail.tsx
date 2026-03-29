@@ -217,7 +217,11 @@ export function SongDetail({
 			const sorted = [...groupNotes].sort(
 				(a, b) => measureStart(a.measure) - measureStart(b.measure),
 			);
-			const text = `*${song}*\n${sorted.map(fmt).join("\n")}`;
+			const isDateGroup = groupKey !== "active" && groupKey !== "archived";
+			const header = isDateGroup
+				? `*${song}* — ${formatDate(groupKey)}`
+				: `*${song}*`;
+			const text = `${header}\n${sorted.map(fmt).join("\n")}`;
 			navigator.clipboard
 				.writeText(text.trim())
 				.then(() => showToast("Copied ✓"))

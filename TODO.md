@@ -2,7 +2,6 @@
 
 - Migrate to Tailwind
 - Fix colors for category filters
-- Add date to copied text, if in Date mode
 - Rename "resolved" to "archive" in the code
 - Render markdown in note text, including newlines
 - Selecting a note should expand it to edit mode, if signed in. Remove edit button.
