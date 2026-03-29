@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import { formatDate, measureStart } from "../../utils.js";
 import { getToken } from "../lib/auth";
 import { SHEET_NAME } from "../lib/config";
-import { deleteNoteRow, updateCell, updateRow } from "../lib/sheets";
+import { appendRow, deleteNoteRow, updateCell, updateRow } from "../lib/sheets";
 import type { Note, View } from "../types";
+import { AddNote } from "./AddNote";
 import { FilterChips } from "./FilterChips";
 import { NoteRow } from "./NoteRow";
 
@@ -15,7 +16,6 @@ interface SongDetailProps {
 	categories: string[];
 	accessToken: string | null;
 	onBack: () => void;
-	onOpenAdd: () => void;
 	onNotesChange: (updater: (prev: Note[]) => Note[]) => void;
 	showToast: (msg: string, color?: string) => void;
 }
@@ -27,7 +27,6 @@ export function SongDetail({
 	categories,
 	accessToken,
 	onBack,
-	onOpenAdd,
 	onNotesChange,
 	showToast,
 }: SongDetailProps) {
@@ -38,6 +37,7 @@ export function SongDetail({
 	);
 	const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 	const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+	const [isAdding, setIsAdding] = useState(false);
 
 	// Reset local state when the song changes
 	// biome-ignore lint/correctness/useExhaustiveDependencies: song is the intentional trigger
@@ -47,6 +47,7 @@ export function SongDetail({
 		setActiveCategoryFilters(new Set());
 		setEditingNoteId(null);
 		setSelectedNoteId(null);
+		setIsAdding(false);
 	}, [song]);
 
 	// Click-outside clears selection
@@ -164,8 +165,7 @@ export function SongDetail({
 				showToast("Note updated ✓");
 			} catch (e) {
 				onNotesChange((prev) => prev.map((n) => (n.id === id ? note : n)));
-				if ((e as Error).message !== "auth")
-					showToast("Could not save — try again", "#c96b6b");
+				throw e;
 			}
 		},
 		[notes, onNotesChange, showToast],
@@ -347,12 +347,45 @@ export function SongDetail({
 					/>
 				</div>
 			)}
+			{isAdding && (
+				<AddNote
+					parts={parts}
+					categories={categories}
+					onCancel={() => setIsAdding(false)}
+					onSubmit={async (fields) => {
+						const id = String(Date.now());
+						const newNote = {
+							id,
+							song,
+							...fields,
+							resolved: false,
+							_row: notes.length + 2,
+						};
+						await appendRow(
+							[
+								id,
+								song,
+								fields.measure,
+								fields.date,
+								fields.parts.join(","),
+								fields.categories.join(","),
+								fields.note,
+								"false",
+							],
+							getToken,
+						);
+						showToast("Note saved ✓");
+						onNotesChange((prev) => [...prev, newNote]);
+						setIsAdding(false);
+					}}
+				/>
+			)}
 			<div id="detail-notes">{renderGroups()}</div>
-			{accessToken && (
+			{accessToken && !isAdding && (
 				<button
 					className="fab"
 					type="button"
-					onClick={onOpenAdd}
+					onClick={() => setIsAdding(true)}
 					style={{ display: "block" }}
 				>
 					+

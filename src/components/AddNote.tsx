@@ -1,78 +1,61 @@
-import { useState } from "react";
-import { getToken } from "../lib/auth";
-import { appendRow } from "../lib/sheets";
-import type { Note } from "../types";
+import { useEffect, useRef, useState } from "react";
 import { FilterChips } from "./FilterChips";
 
-interface AddNoteProps {
+export interface NoteFields {
+	measure: string;
+	date: string;
 	parts: string[];
 	categories: string[];
-	notes: Note[];
-	configSongs: string[];
-	initialSong: string;
+	note: string;
+}
+
+interface AddNoteProps {
+	initialValues?: Partial<NoteFields>;
+	parts: string[];
+	categories: string[];
 	onCancel: () => void;
-	onSaved: (note: Note) => void;
-	showToast: (msg: string, color?: string) => void;
+	onSubmit: (fields: NoteFields) => Promise<void>;
 }
 
 export function AddNote({
+	initialValues,
 	parts,
 	categories,
-	notes,
-	configSongs,
-	initialSong,
 	onCancel,
-	onSaved,
-	showToast,
+	onSubmit,
 }: AddNoteProps) {
-	const [song, setSong] = useState(initialSong);
-	const [measure, setMeasure] = useState("");
-	const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-	const [selParts, setSelParts] = useState(new Set<string>());
-	const [selCategories, setSelCategories] = useState(new Set<string>());
-	const [noteText, setNoteText] = useState("");
+	const [measure, setMeasure] = useState(initialValues?.measure ?? "");
+	const [date, setDate] = useState(
+		initialValues?.date ?? new Date().toISOString().slice(0, 10),
+	);
+	const [selParts, setSelParts] = useState(new Set(initialValues?.parts ?? []));
+	const [selCategories, setSelCategories] = useState(
+		new Set(initialValues?.categories ?? []),
+	);
+	const [noteText, setNoteText] = useState(initialValues?.note ?? "");
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-	const allSongs = [...new Set([...configSongs, ...notes.map((n) => n.song)])]
-		.filter(Boolean)
-		.sort();
+	useEffect(() => {
+		textareaRef.current?.focus();
+	}, []);
 
 	async function handleSubmit() {
-		if (!song.trim() || !noteText.trim() || !date) {
-			setError("Please fill in Song, Date, and Note.");
+		if (!noteText.trim() || !date) {
+			setError("Please fill in Note and Date.");
 			return;
 		}
 		setError(null);
 		setSaving(true);
-		const id = String(Date.now());
-		const newNote: Note = {
-			id,
-			song: song.trim(),
-			measure: measure.trim(),
-			date,
-			parts: [...selParts],
-			categories: [...selCategories],
-			note: noteText.trim(),
-			resolved: false,
-			_row: notes.length + 2,
-		};
 		try {
-			await appendRow(
-				[
-					id,
-					newNote.song,
-					newNote.measure,
-					date,
-					newNote.parts.join(","),
-					newNote.categories.join(","),
-					newNote.note,
-					"false",
-				],
-				getToken,
-			);
-			showToast("Note saved ✓");
-			onSaved(newNote);
+			await onSubmit({
+				measure: measure.trim(),
+				date,
+				parts: [...selParts],
+				categories: [...selCategories],
+				note: noteText.trim(),
+			});
 		} catch (e) {
 			if ((e as Error).message !== "auth")
 				setError("Could not save. Check your connection and try again.");
@@ -82,43 +65,32 @@ export function AddNote({
 	}
 
 	return (
-		<div id="screen-add" className="screen active screen-pad">
-			<button className="back-btn" type="button" onClick={onCancel}>
-				← Cancel
-			</button>
-			<div className="form-title">Add a Note</div>
+		<div className="edit-form">
 			{error && <div className="error-banner show">{error}</div>}
-
 			<div className="field">
-				<label htmlFor="f-song">Song</label>
-				<input
-					id="f-song"
-					list="song-datalist"
-					value={song}
-					onChange={(e) => setSong(e.target.value)}
-					placeholder="Song name…"
-					autoComplete="off"
+				<label htmlFor="note-form-note">Note</label>
+				<textarea
+					id="note-form-note"
+					ref={textareaRef}
+					value={noteText}
+					onChange={(e) => setNoteText(e.target.value)}
+					placeholder="Describe the note from the director or section leader…"
 				/>
-				<datalist id="song-datalist">
-					{allSongs.map((s) => (
-						<option key={s} value={s} />
-					))}
-				</datalist>
 			</div>
 			<div className="field-row">
 				<div className="field">
-					<label htmlFor="f-measure">Measure(s)</label>
+					<label htmlFor="note-form-measure">Measure(s)</label>
 					<input
-						id="f-measure"
+						id="note-form-measure"
 						value={measure}
 						onChange={(e) => setMeasure(e.target.value)}
 						placeholder="e.g. 32–36"
 					/>
 				</div>
 				<div className="field">
-					<label htmlFor="f-date">Date</label>
+					<label htmlFor="note-form-date">Date</label>
 					<input
-						id="f-date"
+						id="note-form-date"
 						type="date"
 						value={date}
 						onChange={(e) => setDate(e.target.value)}
@@ -147,25 +119,19 @@ export function AddNote({
 					dataAttr="data-category"
 				/>
 			</div>
-			<div className="field">
-				<label htmlFor="f-note">Note</label>
-				<textarea
-					id="f-note"
-					value={noteText}
-					onChange={(e) => setNoteText(e.target.value)}
-					placeholder="Describe the note from the director or section leader…"
-				/>
+			<div className="edit-actions">
+				<button className="cancel-edit-btn" type="button" onClick={onCancel}>
+					Cancel
+				</button>
+				<button
+					className="save-edit-btn"
+					type="button"
+					disabled={saving}
+					onClick={handleSubmit}
+				>
+					{saving ? "Saving…" : "Save Note"}
+				</button>
 			</div>
-			<button
-				className={`submit-btn${saving ? " loading" : ""}`}
-				id="submit-btn"
-				type="button"
-				disabled={saving}
-				onClick={handleSubmit}
-			>
-				<div className="btn-spinner" />
-				<span className="btn-text">{saving ? "Saving…" : "Save Note"}</span>
-			</button>
 		</div>
 	);
 }

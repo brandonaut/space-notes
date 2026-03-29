@@ -16,6 +16,6 @@ export interface Config {
 	songs: string[];
 }
 
-export type Screen = "songs" | "detail" | "add";
+export type Screen = "songs" | "detail";
 
 export type View = "measure" | "chron";

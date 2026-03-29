@@ -3,7 +3,6 @@ import { initAuth } from "../lib/auth";
 import { DEFAULT_CATEGORIES, DEFAULT_PARTS } from "../lib/config";
 import { loadConfig, loadNotes } from "../lib/sheets";
 import type { Config, Note, Screen } from "../types";
-import { AddNote } from "./AddNote";
 import { Header } from "./Header";
 import { SongDetail } from "./SongDetail";
 import { SongList } from "./SongList";
@@ -62,14 +61,6 @@ export function App() {
 		window.scrollTo(0, 0);
 	}, []);
 
-	const handleNoteAdded = useCallback(
-		(note: Note) => {
-			setNotes((prev) => [...prev, note]);
-			openSong(note.song);
-		},
-		[openSong],
-	);
-
 	return (
 		<>
 			{isLoading && (
@@ -99,31 +90,9 @@ export function App() {
 					categories={config.categories}
 					accessToken={accessToken}
 					onBack={() => setScreen("songs")}
-					onOpenAdd={() => setScreen("add")}
 					onNotesChange={setNotes}
 					showToast={showToast}
 				/>
-			)}
-
-			{screen === "add" && (
-				<AddNote
-					parts={config.parts}
-					categories={config.categories}
-					notes={notes}
-					configSongs={config.songs}
-					initialSong={currentSong ?? ""}
-					onCancel={() =>
-						currentSong ? setScreen("detail") : setScreen("songs")
-					}
-					onSaved={handleNoteAdded}
-					showToast={showToast}
-				/>
-			)}
-
-			{screen !== "add" && accessToken && (
-				<button className="fab" type="button" onClick={() => setScreen("add")}>
-					+
-				</button>
 			)}
 
 			<Toast message={toast?.msg ?? null} color={toast?.color} />
