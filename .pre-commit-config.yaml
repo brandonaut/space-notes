@@ -8,6 +8,6 @@ repos:
         pass_filenames: false
       - id: vitest
         name: Vitest
-        entry: bun test
+        entry: bun run test
         language: system
         pass_filenames: false
