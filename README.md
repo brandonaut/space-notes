@@ -1,5 +1,7 @@
 # 🎵 Space Notes
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=brandonaut_space-notes)](https://sonarcloud.io/summary/new_code?id=brandonaut_space-notes)
+
 A mobile-first web app for capturing and browsing barbershop chorus rehearsal notes.
 Directors and section leaders add notes after rehearsal; chorus members browse them by song, measure, or rehearsal date.
 
@@ -31,9 +33,11 @@ Host the three files (`index.html`, `app.css`, `app.js`) anywhere that serves st
 
 1. Enable Pages in **Settings → Pages**, source: **GitHub Actions**
 2. Create and push a version tag:
+
    ```bash
    git tag v1.0.0 && git push origin v1.0.0
    ```
+
 3. The workflow builds and publishes automatically
 4. Your URL: `https://<username>.github.io/<repo>`
 
