@@ -1,25 +1,21 @@
 # TODO
 
 - Migrate to Tailwind
-- Fix colors for category filters
-- Default part filter to all selected
-- Default category filter to all selected
-- Add date to copied text, if in Rehearsal mode
-- Rename By Rehearsal to By Date
-- Convert .pre-commit-config.yaml to TOML
+- Rename "By Rehearsal" to "By Date"
+- Add date to copied text, if in Date mode
 - Rename "resolved" to "archive" in the code
 - Render markdown in note text, including newlines
-- Use same segmented pill for part filter and selection in CreateNote
-- Selecting a note should expand it to edit mode, if signed in. Remove edit button. Once in edit mode, the options to delete and archive become available.
-- Create Note enhancements
-  - Fix placeholder text for new note
-  - Move cancel button next to Save Note
-  - Make note content the first entry in the dialog and give it default focus. It should be really easy to click "+" and then start entering the note.
+- Selecting a note should expand it to edit mode, if signed in. Remove edit button.
+- Make Archive and Delete available after long pressing one or more notes.
+- Convert .pre-commit-config.yaml to TOML
 - Improve song management
   - Instead of adding notes and selecting which song it applies to, the All Songs page should have the ability to create a new song.
   - Make songs archivable
   - Make songs deletable
   - Enable renaming song
+- Make the measure number field activate the numberpad keyboard on mobile
+- Add release-please
+- Add Renovate
 - Add client side routing, so that we can link to individual songs.
 - Make it a PWA
 - Create logo and favicon
