@@ -15,6 +15,13 @@ interface PartPillProps {
 	onChange?: (next: Set<string>) => void;
 }
 
+const partColors: Record<string, string> = {
+	Tenor: "text-tenor",
+	Lead: "text-lead",
+	Baritone: "text-bari",
+	Bass: "text-bass",
+};
+
 export function PartPill({ parts, selected, onChange }: PartPillProps) {
 	const allActive = selected.size === 0;
 
@@ -34,23 +41,24 @@ export function PartPill({ parts, selected, onChange }: PartPillProps) {
 	}
 
 	return (
-		<span className="part-pill">
+		<span className="inline-flex items-stretch bg-surface2 border border-border rounded-md overflow-hidden">
 			{parts.map((p) => {
 				const active = allActive || selected.has(p);
+				const colorClass = active
+					? (partColors[p] ?? "text-muted")
+					: "text-muted";
+				const segClass = `text-xs font-bold py-1 px-2 border-r border-border last:border-r-0 bg-transparent leading-none ${colorClass} ${active ? "opacity-100" : "opacity-30"}`;
 				return onChange ? (
 					<button
 						key={p}
 						type="button"
-						className={`part-pill-seg ${p}${active ? " active" : ""}`}
+						className={`${segClass} cursor-pointer transition-opacity ${active ? "hover:opacity-75" : "hover:opacity-60"}`}
 						onClick={() => toggle(p)}
 					>
 						{abbrev(p)}
 					</button>
 				) : (
-					<span
-						key={p}
-						className={`part-pill-seg ${p}${active ? " active" : ""}`}
-					>
+					<span key={p} className={segClass}>
 						{abbrev(p)}
 					</span>
 				);

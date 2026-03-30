@@ -64,9 +64,9 @@ export function App() {
 	return (
 		<>
 			{isLoading && (
-				<div className="loading-overlay">
-					<div className="spinner" />
-					<p>Loading notes…</p>
+				<div className="fixed inset-0 bg-bg flex flex-col items-center justify-center z-[200] gap-4">
+					<div className="w-8 h-8 rounded-full border-2 border-border border-t-accent spin" />
+					<p className="text-sm text-muted">Loading notes…</p>
 				</div>
 			)}
 			<Header accessToken={accessToken} />

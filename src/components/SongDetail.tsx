@@ -56,7 +56,7 @@ export function SongDetail({
 	// Click-outside clears selection
 	useEffect(() => {
 		function handler(e: MouseEvent) {
-			if (!(e.target as Element).closest(".note-row")) {
+			if (!(e.target as Element).closest("[data-note-row]")) {
 				setSelectedNoteId(null);
 			}
 		}
@@ -232,10 +232,10 @@ export function SongDetail({
 
 	function groupHeader(label: string, key: string) {
 		return (
-			<div className="group-header">
+			<div className="flex items-center justify-between text-xs font-semibold tracking-widest uppercase text-muted py-2.5 pb-2 border-b border-border mb-2.5">
 				<span>{label}</span>
 				<button
-					className="group-copy-btn"
+					className="bg-transparent border-none text-muted cursor-pointer py-[2px] px-1 rounded-lg flex items-center transition-colors hover:text-text"
 					title="Copy"
 					type="button"
 					onClick={() => copyGroup(key)}
@@ -252,7 +252,11 @@ export function SongDetail({
 
 	function renderGroups() {
 		if (!filtered.length) {
-			return <div className="no-notes">No notes for this filter.</div>;
+			return (
+				<div className="text-center py-10 px-5 text-muted text-sm">
+					No notes for this filter.
+				</div>
+			);
 		}
 		if (view === "measure") {
 			const open = filtered.filter((n) => !n.resolved).sort(byMeasure);
@@ -281,8 +285,7 @@ export function SongDetail({
 			groups[n.date].push(n);
 		}
 		return Object.keys(groups)
-			.sort()
-			.reverse()
+			.sort((a, b) => b.localeCompare(a))
 			.map((d) => (
 				<div key={d}>
 					{groupHeader(formatDate(d), d)}
@@ -312,23 +315,27 @@ export function SongDetail({
 	}
 
 	return (
-		<div id="screen-detail" className="screen active screen-pad">
-			<button className="back-btn" type="button" onClick={onBack}>
+		<div id="screen-detail" className="p-5">
+			<button
+				className="bg-transparent border-none text-accent font-sans text-sm font-medium cursor-pointer flex items-center gap-1.5 p-0 mb-4"
+				type="button"
+				onClick={onBack}
+			>
 				← All Songs
 			</button>
-			<div className="song-title-block">
-				<h2>{song}</h2>
-				<div className="detail-note-count section-label">
-					{songNotes.length} note{songNotes.length !== 1 ? "s" : ""} ·{" "}
+			<div className="mb-5">
+				<h2 className="font-serif text-2xl text-accent mb-1">{song}</h2>
+				<div className="text-xs font-semibold tracking-widest uppercase text-muted">
+					{songNotes.length} note{songNotes.length === 1 ? "" : "s"} ·{" "}
 					{openCount} open
 				</div>
 			</div>
-			<div className="detail-toolbar">
-				<div className="view-toggle">
+			<div className="flex items-center gap-2.5 mb-5">
+				<div className="flex bg-surface2 rounded-lg p-0.5 flex-1">
 					<button
 						id="btn-measure"
 						type="button"
-						className={view === "measure" ? "active" : ""}
+						className={`flex-1 py-2 px-2 border-none rounded-md text-xs font-medium cursor-pointer transition-all tracking-[0.04em] ${view === "measure" ? "bg-surface text-text shadow-sm" : "bg-transparent text-muted"}`}
 						onClick={() => setView("measure")}
 					>
 						By Measure
@@ -336,7 +343,7 @@ export function SongDetail({
 					<button
 						id="btn-chron"
 						type="button"
-						className={view === "chron" ? "active" : ""}
+						className={`flex-1 py-2 px-2 border-none rounded-md text-xs font-medium cursor-pointer transition-all tracking-[0.04em] ${view === "chron" ? "bg-surface text-text shadow-sm" : "bg-transparent text-muted"}`}
 						onClick={() => setView("chron")}
 					>
 						By Date
@@ -344,7 +351,10 @@ export function SongDetail({
 				</div>
 			</div>
 			{parts.length >= 2 && (
-				<div className="filter-row" id="filter-chips">
+				<div
+					className="no-scrollbar flex gap-2 overflow-x-auto pb-2 mb-4"
+					id="filter-chips"
+				>
 					<PartPill
 						parts={parts}
 						selected={activeFilters}
@@ -353,7 +363,10 @@ export function SongDetail({
 				</div>
 			)}
 			{categories.length >= 2 && (
-				<div className="filter-row" id="category-chips">
+				<div
+					className="no-scrollbar flex gap-2 overflow-x-auto pb-2 mb-4"
+					id="category-chips"
+				>
 					<FilterChips
 						options={categories}
 						selected={activeCategoryFilters}
@@ -366,10 +379,9 @@ export function SongDetail({
 			<div id="detail-notes">{renderGroups()}</div>
 			{accessToken && (
 				<button
-					className="fab"
+					className="fixed bottom-6 right-5 w-14 h-14 rounded-full bg-accent text-bg border-none text-[30px] font-light leading-none cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.5)] flex items-center justify-center z-50 transition-all active:scale-90"
 					type="button"
 					onClick={() => setModalState({ mode: "add" })}
-					style={{ display: "block" }}
 				>
 					+
 				</button>
