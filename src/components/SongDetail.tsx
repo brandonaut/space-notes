@@ -92,10 +92,10 @@ export function SongDetail({
 	);
 
 	const handleDelete = useCallback(
-		async (id: string) => {
+		async (id: string): Promise<boolean> => {
 			const note = notes.find((n) => n.id === id);
-			if (!note) return;
-			if (!confirm("Delete this note permanently?")) return;
+			if (!note) return false;
+			if (!confirm("Delete this note permanently?")) return false;
 			try {
 				await deleteNoteRow(note, getToken);
 				onNotesChange((prev) =>
@@ -107,9 +107,11 @@ export function SongDetail({
 						})),
 				);
 				showToast("Note deleted");
+				return true;
 			} catch (e) {
 				if ((e as Error).message !== "auth")
 					showToast("Could not delete — try again", "#c96b6b");
+				return false;
 			}
 		},
 		[notes, onNotesChange, showToast],
@@ -291,8 +293,6 @@ export function SongDetail({
 				parts={parts}
 				accessToken={accessToken}
 				onEdit={() => setModalState({ mode: "edit", note: n })}
-				onArchive={handleArchive}
-				onDelete={handleDelete}
 			/>
 		);
 	}
@@ -380,6 +380,17 @@ export function SongDetail({
 						}
 						parts={parts}
 						categories={categories}
+						{...(modalState.mode === "edit" && {
+							isArchived: modalState.note.archive,
+							onArchive: () => {
+								handleArchive(modalState.note.id, !modalState.note.archive);
+								setModalState(null);
+							},
+							onDelete: async () => {
+								const deleted = await handleDelete(modalState.note.id);
+								if (deleted) setModalState(null);
+							},
+						})}
 						onCancel={() => setModalState(null)}
 						onSubmit={
 							modalState.mode === "add"

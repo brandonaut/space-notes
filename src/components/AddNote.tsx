@@ -14,6 +14,9 @@ interface AddNoteProps {
 	initialValues?: Partial<NoteFields>;
 	parts: string[];
 	categories: string[];
+	isArchived?: boolean;
+	onArchive?: () => void;
+	onDelete?: () => Promise<void>;
 	onCancel: () => void;
 	onSubmit: (fields: NoteFields) => Promise<void>;
 }
@@ -22,6 +25,9 @@ export function AddNote({
 	initialValues,
 	parts,
 	categories,
+	isArchived,
+	onArchive,
+	onDelete,
 	onCancel,
 	onSubmit,
 }: AddNoteProps) {
@@ -132,22 +138,44 @@ export function AddNote({
 					dataAttr="data-category"
 				/>
 			</div>
-			<div className="flex gap-2 justify-end mt-1">
-				<button
-					className="text-sm font-semibold text-muted bg-transparent border border-border rounded-lg px-4 py-2 cursor-pointer transition-all hover:text-text hover:border-muted"
-					type="button"
-					onClick={onCancel}
-				>
-					Cancel
-				</button>
-				<button
-					className="text-sm font-semibold text-bg bg-accent border-none rounded-lg px-4 py-2 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-					type="button"
-					disabled={saving}
-					onClick={handleSubmit}
-				>
-					{saving ? "Saving…" : "Save Note"}
-				</button>
+			<div className="border-t border-border mt-2 pt-4 flex items-center justify-between gap-2">
+				<div className="flex gap-2">
+					{onDelete && (
+						<button
+							className="text-sm font-semibold text-[#c96b6b] bg-transparent border border-[#c96b6b] rounded-lg px-4 py-2 cursor-pointer transition-all hover:bg-[rgba(201,107,107,0.08)]"
+							type="button"
+							onClick={onDelete}
+						>
+							Delete
+						</button>
+					)}
+					{onArchive && (
+						<button
+							className="text-sm font-semibold text-muted bg-transparent border border-border rounded-lg px-4 py-2 cursor-pointer transition-all hover:text-text hover:border-muted"
+							type="button"
+							onClick={onArchive}
+						>
+							{isArchived ? "Unarchive" : "Archive"}
+						</button>
+					)}
+				</div>
+				<div className="flex gap-2">
+					<button
+						className="text-sm font-semibold text-muted bg-transparent border border-border rounded-lg px-4 py-2 cursor-pointer transition-all hover:text-text hover:border-muted"
+						type="button"
+						onClick={onCancel}
+					>
+						Cancel
+					</button>
+					<button
+						className="text-sm font-semibold text-bg bg-accent border-none rounded-lg px-4 py-2 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+						type="button"
+						disabled={saving}
+						onClick={handleSubmit}
+					>
+						{saving ? "Saving…" : "Save Note"}
+					</button>
+				</div>
 			</div>
 		</div>
 	);

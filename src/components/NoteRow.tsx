@@ -1,4 +1,3 @@
-import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import type { Note } from "../types";
 import { PartPill } from "./PartPill";
 
@@ -9,31 +8,19 @@ const categoryTagColors: Record<string, string> = {
 	Other: "text-tag-other",
 };
 
-const ACTION_BTN =
-	"text-xs font-semibold text-muted bg-surface2 border border-border py-0.5 px-2 rounded-full cursor-pointer transition-all whitespace-nowrap flex items-center hover:text-text hover:border-muted";
-
 interface NoteRowProps {
 	note: Note;
 	parts: string[];
 	accessToken: string | null;
 	onEdit: () => void;
-	onArchive: (id: string, archive: boolean) => Promise<void>;
-	onDelete: (id: string) => Promise<void>;
 }
 
-export function NoteRow({
-	note,
-	parts,
-	accessToken,
-	onEdit,
-	onArchive,
-	onDelete,
-}: NoteRowProps) {
+export function NoteRow({ note, parts, accessToken, onEdit }: NoteRowProps) {
 	const prefix = note.measure ? `m.${note.measure}` : "";
 
 	return (
 		<div
-			className={`group/row flex items-start gap-2.5 py-2 pl-2.5 border-b border-border border-l-2 border-l-transparent relative overflow-hidden ${accessToken ? "cursor-pointer" : ""}`}
+			className={`flex items-start gap-2.5 py-2 pl-2.5 border-b border-border border-l-2 border-l-transparent ${accessToken ? "cursor-pointer" : ""}`}
 			id={`note-${note.id}`}
 			data-note-row="true"
 			onClick={accessToken ? onEdit : undefined}
@@ -62,46 +49,6 @@ export function NoteRow({
 					))}
 				</span>
 			</span>
-			{accessToken && (
-				<div className="note-row-actions-bg absolute right-0 top-0 bottom-0 flex items-center gap-1 pr-2 pl-6 transition-opacity duration-150 opacity-0 group-hover/row:opacity-100">
-					{note.archive ? (
-						<button
-							className={ACTION_BTN}
-							title="Unarchive"
-							type="button"
-							onClick={(e) => {
-								e.stopPropagation();
-								onArchive(note.id, false);
-							}}
-						>
-							<ArchiveRestore size={16} />
-						</button>
-					) : (
-						<button
-							className={ACTION_BTN}
-							title="Archive"
-							type="button"
-							onClick={(e) => {
-								e.stopPropagation();
-								onArchive(note.id, true);
-							}}
-						>
-							<Archive size={16} />
-						</button>
-					)}
-					<button
-						className={`${ACTION_BTN} hover:text-[#c96b6b] hover:border-[#c96b6b]`}
-						title="Delete"
-						type="button"
-						onClick={(e) => {
-							e.stopPropagation();
-							onDelete(note.id);
-						}}
-					>
-						<Trash2 size={16} />
-					</button>
-				</div>
-			)}
 		</div>
 	);
 }

@@ -40,11 +40,6 @@ body {
   border-radius: 3px 0 0 3px;
 }
 
-/* gradient stop at 30% — not expressible as a utility */
-.note-row-actions-bg {
-  background: linear-gradient(to right, transparent, var(--color-bg) 30%);
-}
-
 /* scrollbar hiding */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
