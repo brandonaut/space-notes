@@ -64,25 +64,25 @@ export function SongDetail({
 				n.categories.some((c) => activeCategoryFilters.has(c)),
 		);
 
-	const openCount = songNotes.filter((n) => !n.resolved).length;
+	const openCount = songNotes.filter((n) => !n.archive).length;
 
-	const handleResolve = useCallback(
-		async (id: string, resolved: boolean) => {
+	const handleArchive = useCallback(
+		async (id: string, archive: boolean) => {
 			const note = notes.find((n) => n.id === id);
 			if (!note) return;
 			onNotesChange((prev) =>
-				prev.map((n) => (n.id === id ? { ...n, resolved } : n)),
+				prev.map((n) => (n.id === id ? { ...n, archive } : n)),
 			);
 			try {
 				await updateCell(
 					`${SHEET_NAME}!H${note._row}`,
-					resolved ? "true" : "false",
+					archive ? "true" : "false",
 					getToken,
 				);
-				showToast(resolved ? "Archived ✓" : "Unarchived");
+				showToast(archive ? "Archived ✓" : "Unarchived");
 			} catch (e) {
 				onNotesChange((prev) =>
-					prev.map((n) => (n.id === id ? { ...n, resolved: !resolved } : n)),
+					prev.map((n) => (n.id === id ? { ...n, archive: !archive } : n)),
 				);
 				if ((e as Error).message !== "auth")
 					showToast("Could not save — try again", "#c96b6b");
@@ -122,7 +122,7 @@ export function SongDetail({
 				id,
 				song,
 				...fields,
-				resolved: false,
+				archive: false,
 				_row: notes.length + 2,
 			};
 			await appendRow(
@@ -162,7 +162,7 @@ export function SongDetail({
 						fields.parts.join(","),
 						fields.categories.join(","),
 						fields.note,
-						note.resolved ? "true" : "false",
+						note.archive ? "true" : "false",
 					],
 					getToken,
 				);
@@ -180,9 +180,9 @@ export function SongDetail({
 		(groupKey: string) => {
 			let groupNotes = filtered;
 			if (groupKey === "active")
-				groupNotes = groupNotes.filter((n) => !n.resolved);
+				groupNotes = groupNotes.filter((n) => !n.archive);
 			else if (groupKey === "archived")
-				groupNotes = groupNotes.filter((n) => n.resolved);
+				groupNotes = groupNotes.filter((n) => n.archive);
 			else groupNotes = groupNotes.filter((n) => n.date === groupKey);
 
 			if (!groupNotes.length) {
@@ -246,8 +246,8 @@ export function SongDetail({
 			);
 		}
 		if (view === "measure") {
-			const open = filtered.filter((n) => !n.resolved).sort(byMeasure);
-			const archived = filtered.filter((n) => n.resolved).sort(byMeasure);
+			const open = filtered.filter((n) => !n.archive).sort(byMeasure);
+			const archived = filtered.filter((n) => n.archive).sort(byMeasure);
 			return (
 				<>
 					{open.length > 0 && (
@@ -291,7 +291,7 @@ export function SongDetail({
 				parts={parts}
 				accessToken={accessToken}
 				onEdit={() => setModalState({ mode: "edit", note: n })}
-				onResolve={handleResolve}
+				onArchive={handleArchive}
 				onDelete={handleDelete}
 			/>
 		);

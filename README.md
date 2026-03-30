@@ -95,7 +95,7 @@ If the `Config` sheet is missing or empty, the app falls back to built-in defaul
 1. Tap a song card on the home screen
 2. Use the **By Measure / By Rehearsal** toggle to switch views
 3. Tap a part chip (Tenor, Lead, etc.) to filter to your section
-4. Tap **Mark resolved** on a note once the chorus has addressed it
+4. Tap **Archive** on a note once the chorus has addressed it
 
 ### Refreshing
 

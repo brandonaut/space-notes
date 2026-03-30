@@ -62,7 +62,7 @@ export function SongList({
 				) : (
 					songsWithNotes.map((song) => {
 						const sNotes = notes.filter((n) => n.song === song);
-						const open = sNotes.filter((n) => !n.resolved);
+						const open = sNotes.filter((n) => !n.archive);
 						const lastDate = [...sNotes.map((n) => n.date)].sort((a, b) =>
 							b.localeCompare(a),
 						)[0];

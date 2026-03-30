@@ -6,7 +6,7 @@ export interface Note {
 	parts: string[];
 	categories: string[];
 	note: string;
-	resolved: boolean;
+	archive: boolean;
 	_row: number;
 }
 

@@ -17,7 +17,7 @@ interface NoteRowProps {
 	parts: string[];
 	accessToken: string | null;
 	onEdit: () => void;
-	onResolve: (id: string, resolved: boolean) => Promise<void>;
+	onArchive: (id: string, archive: boolean) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
 }
 
@@ -26,7 +26,7 @@ export function NoteRow({
 	parts,
 	accessToken,
 	onEdit,
-	onResolve,
+	onArchive,
 	onDelete,
 }: NoteRowProps) {
 	const prefix = note.measure ? `m.${note.measure}` : "";
@@ -47,7 +47,7 @@ export function NoteRow({
 				{prefix}
 			</span>
 			<span
-				className={`text-sm leading-relaxed text-text flex-1 min-w-0 flex flex-col gap-1.5 ${note.resolved ? "opacity-40 line-through" : ""}`}
+				className={`text-sm leading-relaxed text-text flex-1 min-w-0 flex flex-col gap-1.5 ${note.archive ? "opacity-40 line-through" : ""}`}
 			>
 				<span>{note.note}</span>
 				<span className="flex flex-wrap gap-1 items-center">
@@ -64,14 +64,14 @@ export function NoteRow({
 			</span>
 			{accessToken && (
 				<div className="note-row-actions-bg absolute right-0 top-0 bottom-0 flex items-center gap-1 pr-2 pl-6 transition-opacity duration-150 opacity-0 group-hover/row:opacity-100">
-					{note.resolved ? (
+					{note.archive ? (
 						<button
 							className={ACTION_BTN}
 							title="Unarchive"
 							type="button"
 							onClick={(e) => {
 								e.stopPropagation();
-								onResolve(note.id, false);
+								onArchive(note.id, false);
 							}}
 						>
 							<ArchiveRestore size={16} />
@@ -83,7 +83,7 @@ export function NoteRow({
 							type="button"
 							onClick={(e) => {
 								e.stopPropagation();
-								onResolve(note.id, true);
+								onArchive(note.id, true);
 							}}
 						>
 							<Archive size={16} />

@@ -75,7 +75,8 @@ This was a deliberate choice: local storage would create divergence between devi
 
 **Section filter chips** are generated dynamically from the parts actually present in a song's notes, so the chip row never shows parts that have no notes.
 
-**Optimistic updates** are used for the "Mark resolved" action: the note is marked resolved in memory and re-rendered immediately, then the Sheet write happens in the background. If it fails, the note is rolled back and a toast error is shown.
+**Optimistic updates** are used for the archive action: the note is marked archived in memory and re-rendered immediately, then the Sheet write happens in the background.
+If it fails, the note is rolled back and a toast error is shown.
 
 ### Google Apps Script Web App — the API layer
 
@@ -85,7 +86,7 @@ A single Apps Script file acts as a thin HTTP-to-Sheets bridge. It exposes three
 |--------|--------|--------------|
 | `get` | Read | Reads all rows, converts to JSON array, returns to client |
 | `add` | Append | Appends one new row from the JSON payload in `params.note` |
-| `resolve` | Update | Scans rows for matching `id`, sets column 9 (`resolved`) to `"true"` |
+| `resolve` | Update | Scans rows for matching `id`, sets column 9 (`archive`) to `"true"` |
 
 The script is deployed with **Execute as: Me** and **Access: Anyone**.
 This means the Sheet doesn't need to be shared publicly — only the script endpoint is public, and it proxies access to the sheet through the script owner's credentials.
@@ -133,14 +134,13 @@ User fills form, taps Save
   → On failure: show error banner, do not update notes[]
 ```
 
-### Resolving a note
+### Archiving a note
 
 ```
-User taps "Mark resolved"
-  → Optimistically set note.resolved = true in notes[]
-  → Re-render (note shows resolved badge immediately)
-  → fetch(API + '?action=resolve&id=<id>')
-  → Apps Script finds row by id, sets resolved = "true"
+User taps "Archive"
+  → Optimistically set note.archive = true in notes[]
+  → Re-render (note shows archived style immediately)
+  → Writes archive = "true" to the sheet via the Sheets API
   → On failure: roll back notes[], re-render, show toast error
 ```
 
