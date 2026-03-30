@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Pencil, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import type { Note } from "../types";
 import { PartPill } from "./PartPill";
 
@@ -15,9 +15,7 @@ const ACTION_BTN =
 interface NoteRowProps {
 	note: Note;
 	parts: string[];
-	isSelected: boolean;
 	accessToken: string | null;
-	onSelect: () => void;
 	onEdit: () => void;
 	onResolve: (id: string, resolved: boolean) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
@@ -26,9 +24,7 @@ interface NoteRowProps {
 export function NoteRow({
 	note,
 	parts,
-	isSelected,
 	accessToken,
-	onSelect,
 	onEdit,
 	onResolve,
 	onDelete,
@@ -37,13 +33,13 @@ export function NoteRow({
 
 	return (
 		<div
-			className={`group/row flex items-start gap-2.5 py-2 pl-2.5 border-b border-border border-l-2 relative overflow-hidden ${accessToken ? "cursor-pointer" : ""} ${isSelected ? "border-l-accent-dim bg-accent/[0.04]" : "border-l-transparent"}`}
+			className={`group/row flex items-start gap-2.5 py-2 pl-2.5 border-b border-border border-l-2 border-l-transparent relative overflow-hidden ${accessToken ? "cursor-pointer" : ""}`}
 			id={`note-${note.id}`}
 			data-note-row="true"
-			onClick={accessToken ? onSelect : undefined}
+			onClick={accessToken ? onEdit : undefined}
 			onKeyDown={
 				accessToken
-					? (e) => (e.key === "Enter" || e.key === " ") && onSelect()
+					? (e) => (e.key === "Enter" || e.key === " ") && onEdit()
 					: undefined
 			}
 		>
@@ -67,9 +63,7 @@ export function NoteRow({
 				</span>
 			</span>
 			{accessToken && (
-				<div
-					className={`note-row-actions-bg absolute right-0 top-0 bottom-0 flex items-center gap-1 pr-2 pl-6 transition-opacity duration-150 ${isSelected ? "opacity-100" : "opacity-0 group-hover/row:opacity-100"}`}
-				>
+				<div className="note-row-actions-bg absolute right-0 top-0 bottom-0 flex items-center gap-1 pr-2 pl-6 transition-opacity duration-150 opacity-0 group-hover/row:opacity-100">
 					{note.resolved ? (
 						<button
 							className={ACTION_BTN}
@@ -95,17 +89,6 @@ export function NoteRow({
 							<Archive size={16} />
 						</button>
 					)}
-					<button
-						className={ACTION_BTN}
-						title="Edit"
-						type="button"
-						onClick={(e) => {
-							e.stopPropagation();
-							onEdit();
-						}}
-					>
-						<Pencil size={16} />
-					</button>
 					<button
 						className={`${ACTION_BTN} hover:text-[#c96b6b] hover:border-[#c96b6b]`}
 						title="Delete"

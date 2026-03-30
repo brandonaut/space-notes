@@ -40,7 +40,6 @@ export function SongDetail({
 	const [activeCategoryFilters, setActiveCategoryFilters] = useState(
 		new Set<string>(),
 	);
-	const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 	const [modalState, setModalState] = useState<ModalState>(null);
 
 	// Reset local state when the song changes
@@ -49,20 +48,8 @@ export function SongDetail({
 		setView("measure");
 		setActiveFilters(new Set());
 		setActiveCategoryFilters(new Set());
-		setSelectedNoteId(null);
 		setModalState(null);
 	}, [song]);
-
-	// Click-outside clears selection
-	useEffect(() => {
-		function handler(e: MouseEvent) {
-			if (!(e.target as Element).closest("[data-note-row]")) {
-				setSelectedNoteId(null);
-			}
-		}
-		document.addEventListener("click", handler);
-		return () => document.removeEventListener("click", handler);
-	}, []);
 
 	const songNotes = notes.filter((n) => n.song === song);
 	let filtered = songNotes;
@@ -302,11 +289,7 @@ export function SongDetail({
 				key={n.id}
 				note={n}
 				parts={parts}
-				isSelected={selectedNoteId === n.id}
 				accessToken={accessToken}
-				onSelect={() =>
-					setSelectedNoteId(selectedNoteId === n.id ? null : n.id)
-				}
 				onEdit={() => setModalState({ mode: "edit", note: n })}
 				onResolve={handleResolve}
 				onDelete={handleDelete}
