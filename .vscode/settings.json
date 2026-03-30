@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "brandonaut",
+        "projectKey": "brandonaut_space-notes"
+    }
+}
