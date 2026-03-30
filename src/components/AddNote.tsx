@@ -1,3 +1,4 @@
+import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { FilterChips } from "./FilterChips";
 import { PartPill } from "./PartPill";
@@ -142,20 +143,26 @@ export function AddNote({
 				<div className="flex gap-2">
 					{onDelete && (
 						<button
-							className="text-sm font-semibold text-[#c96b6b] bg-transparent border border-[#c96b6b] rounded-lg px-4 py-2 cursor-pointer transition-all hover:bg-[rgba(201,107,107,0.08)]"
+							className="text-[#c96b6b] bg-transparent border border-[#c96b6b] rounded-lg p-2 cursor-pointer transition-all hover:bg-[rgba(201,107,107,0.08)]"
 							type="button"
+							title="Delete"
 							onClick={onDelete}
 						>
-							Delete
+							<Trash2 size={18} />
 						</button>
 					)}
 					{onArchive && (
 						<button
-							className="text-sm font-semibold text-muted bg-transparent border border-border rounded-lg px-4 py-2 cursor-pointer transition-all hover:text-text hover:border-muted"
+							className="text-muted bg-transparent border border-border rounded-lg p-2 cursor-pointer transition-all hover:text-text hover:border-muted"
 							type="button"
+							title={isArchived ? "Unarchive" : "Archive"}
 							onClick={onArchive}
 						>
-							{isArchived ? "Unarchive" : "Archive"}
+							{isArchived ? (
+								<ArchiveRestore size={18} />
+							) : (
+								<Archive size={18} />
+							)}
 						</button>
 					)}
 				</div>
