@@ -1,12 +1,9 @@
 # TODO
 
-- Migrate to Tailwind
-- Fix colors for category filters
-- Rename "resolved" to "archive" in the code
 - Render markdown in note text, including newlines
-- Selecting a note should expand it to edit mode, if signed in. Remove edit button.
-- Make Archive and Delete available after long pressing one or more notes.
-- Convert .pre-commit-config.yaml to TOML
+- Add unit tests
+- Add coverage to SonarQube
+- Add client side routing, so that we can link to individual songs.
 - Improve song management
   - Instead of adding notes and selecting which song it applies to, the All Songs page should have the ability to create a new song.
   - Make songs archivable
@@ -15,7 +12,6 @@
 - Make the measure number field activate the numberpad keyboard on mobile
 - Add release-please
 - Add Renovate
-- Add client side routing, so that we can link to individual songs.
 - Make it a PWA
 - Create logo and favicon
 - Add About page with version, last update date, and GitHub link
