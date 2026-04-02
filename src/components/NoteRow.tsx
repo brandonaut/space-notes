@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { Note } from "../types";
 import { PartPill } from "./PartPill";
 
@@ -36,7 +37,14 @@ export function NoteRow({ note, parts, accessToken, onEdit }: NoteRowProps) {
 			<span
 				className={`text-sm leading-relaxed text-text flex-1 min-w-0 flex flex-col gap-1.5 ${note.archive ? "opacity-40 line-through" : ""}`}
 			>
-				<span>{note.note}</span>
+				<span>
+					{note.note.split("\n").map((line, i) => (
+						<Fragment key={`${i}-${line}`}>
+							{i > 0 && <br />}
+							{line}
+						</Fragment>
+					))}
+				</span>
 				<span className="flex flex-wrap gap-1 items-center">
 					<PartPill parts={parts} selected={new Set(note.parts)} />
 					{note.categories.map((c) => (
