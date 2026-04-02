@@ -1,4 +1,4 @@
-import { ArrowLeft, Github } from "lucide-react";
+import { ArrowLeft, GitFork } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function About() {
@@ -41,7 +41,7 @@ export function About() {
 					rel="noopener noreferrer"
 					className="flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors"
 				>
-					<Github size={16} />
+					<GitFork size={16} />
 					brandonaut/space-notes
 				</a>
 			</div>
