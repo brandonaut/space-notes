@@ -94,7 +94,7 @@ export function AddNote({
 					className={`${fieldInput} min-h-[90px] resize-y leading-relaxed`}
 					value={noteText}
 					onChange={(e) => setNoteText(e.target.value)}
-					placeholder="What's this note about?"
+					placeholder="What's this note about? Can use *bold* and _italic_."
 				/>
 			</div>
 			<div className="flex gap-3 mb-4">
