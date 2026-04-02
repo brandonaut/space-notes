@@ -105,6 +105,7 @@ export function AddNote({
 					<input
 						id="note-form-measure"
 						className={fieldInput}
+						inputMode="numeric"
 						value={measure}
 						onChange={(e) => setMeasure(e.target.value)}
 						placeholder="e.g. 32–36"
