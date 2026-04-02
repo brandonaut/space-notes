@@ -1,6 +1,22 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { Note } from "../types";
 import { PartPill } from "./PartPill";
+
+function renderMarkdown(text: string): ReactNode {
+	const tokens = text.split(/(~~.+?~~|\*\*.+?\*\*|\*.+?\*|_.+?_)/);
+	return tokens.map((token, i) => {
+		if (token.startsWith("~~") && token.endsWith("~~"))
+			return <del key={`${i}-${token}`}>{token.slice(2, -2)}</del>;
+		if (token.startsWith("**") && token.endsWith("**"))
+			return <strong key={`${i}-${token}`}>{token.slice(2, -2)}</strong>;
+		if (
+			(token.startsWith("*") && token.endsWith("*")) ||
+			(token.startsWith("_") && token.endsWith("_"))
+		)
+			return <em key={`${i}-${token}`}>{token.slice(1, -1)}</em>;
+		return token;
+	});
+}
 
 const categoryTagColors: Record<string, string> = {
 	Singing: "text-tag-singing",
@@ -41,7 +57,7 @@ export function NoteRow({ note, parts, accessToken, onEdit }: NoteRowProps) {
 					{note.note.split("\n").map((line, i) => (
 						<Fragment key={`${i}-${line}`}>
 							{i > 0 && <br />}
-							{line}
+							{renderMarkdown(line)}
 						</Fragment>
 					))}
 				</span>
