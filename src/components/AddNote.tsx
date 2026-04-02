@@ -31,7 +31,7 @@ export function AddNote({
 	onDelete,
 	onCancel,
 	onSubmit,
-}: AddNoteProps) {
+}: Readonly<AddNoteProps>) {
 	const [measure, setMeasure] = useState(initialValues?.measure ?? "");
 	const [date, setDate] = useState(
 		initialValues?.date ?? new Date().toISOString().slice(0, 10),

@@ -1,10 +1,14 @@
+import { Info } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { signIn, signOut } from "../lib/auth";
 
 interface HeaderProps {
-	accessToken: string | null;
+	readonly accessToken: string | null;
 }
 
-export function Header({ accessToken }: HeaderProps) {
+export function Header({ accessToken }: Readonly<HeaderProps>) {
+	const navigate = useNavigate();
+
 	return (
 		<header className="bg-surface border-b border-border px-5 py-4 flex items-center justify-between sticky top-0 z-[100]">
 			<div>
@@ -16,6 +20,14 @@ export function Header({ accessToken }: HeaderProps) {
 				</div>
 			</div>
 			<div className="flex items-center gap-2">
+				<button
+					className="bg-transparent border-none text-muted cursor-pointer p-2 transition-colors hover:text-accent"
+					type="button"
+					title="About"
+					onClick={() => navigate("/about")}
+				>
+					<Info size={18} />
+				</button>
 				{accessToken ? (
 					<button
 						className="bg-transparent border border-border text-muted rounded-lg px-3.5 py-2 text-sm font-semibold cursor-pointer transition-all hover:text-text hover:border-muted"

@@ -32,7 +32,12 @@ interface NoteRowProps {
 	onEdit: () => void;
 }
 
-export function NoteRow({ note, parts, accessToken, onEdit }: NoteRowProps) {
+export function NoteRow({
+	note,
+	parts,
+	accessToken,
+	onEdit,
+}: Readonly<NoteRowProps>) {
 	const prefix = note.measure ? `m.${note.measure}` : "";
 
 	return (

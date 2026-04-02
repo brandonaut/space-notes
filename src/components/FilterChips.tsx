@@ -41,7 +41,7 @@ export function FilterChips({
 	onChange,
 	mode,
 	dataAttr,
-}: FilterChipsProps) {
+}: Readonly<FilterChipsProps>) {
 	function toggle(opt: string) {
 		const next = new Set(selected);
 		if (next.has(opt)) next.delete(opt);

@@ -18,7 +18,7 @@ export function SongList({
 	error,
 	onOpenSong,
 	onRefresh,
-}: SongListProps) {
+}: Readonly<SongListProps>) {
 	const songs = [...new Set([...configSongs, ...notes.map((n) => n.song)])]
 		.filter(Boolean)
 		.sort();

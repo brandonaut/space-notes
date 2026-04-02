@@ -6,7 +6,7 @@ interface ModalProps {
 	children: ReactNode;
 }
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, children }: Readonly<ModalProps>) {
 	const ref = useRef<HTMLDialogElement>(null);
 
 	useEffect(() => {

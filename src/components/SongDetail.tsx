@@ -34,7 +34,7 @@ export function SongDetail({
 	onBack,
 	onNotesChange,
 	showToast,
-}: SongDetailProps) {
+}: Readonly<SongDetailProps>) {
 	const [view, setView] = useState<View>("measure");
 	const [activeFilters, setActiveFilters] = useState(new Set<string>());
 	const [activeCategoryFilters, setActiveCategoryFilters] = useState(
