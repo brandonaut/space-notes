@@ -51,22 +51,20 @@ export function NoteRow({ note, parts, accessToken, onEdit }: NoteRowProps) {
 				{prefix}
 			</span>
 			<span
-				className={`text-sm leading-relaxed text-text flex-1 min-w-0 flex flex-col gap-1.5 ${note.archive ? "opacity-40 line-through" : ""}`}
+				className={`text-sm leading-relaxed text-text flex-1 min-w-0 ${note.archive ? "opacity-40 line-through" : ""}`}
 			>
-				<span>
-					{note.note.split("\n").map((line, i) => (
-						<Fragment key={`${i}-${line}`}>
-							{i > 0 && <br />}
-							{renderMarkdown(line)}
-						</Fragment>
-					))}
-				</span>
-				<span className="flex flex-wrap gap-1 items-center">
+				{note.note.split("\n").map((line, i) => (
+					<Fragment key={`${i}-${line}`}>
+						{i > 0 && <br />}
+						{renderMarkdown(line)}
+					</Fragment>
+				))}
+				<span className="inline-flex flex-wrap gap-1 items-center ml-1.5 align-middle">
 					<PartPill parts={parts} selected={new Set(note.parts)} />
 					{note.categories.map((c) => (
 						<span
 							key={c}
-							className={`text-[10px] font-semibold py-px px-1.5 rounded-full border border-current bg-transparent ml-1 align-middle ${categoryTagColors[c] ?? "text-muted"}`}
+							className={`text-[10px] font-semibold py-px px-1.5 rounded-full border border-current bg-transparent ${categoryTagColors[c] ?? "text-muted"}`}
 						>
 							{c}
 						</span>
