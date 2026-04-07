@@ -197,14 +197,23 @@ export function SongDetail({
 			}
 
 			const fmt = (n: Note) => {
-				const prefix = n.measure ? `m.${n.measure} ` : "";
+				const prefix = n.measure ? `m.${n.measure}` : "";
 				const partsMeta = n.parts.join(", ");
 				const catsMeta = n.categories.join(", ");
 				const suffix = [partsMeta, catsMeta]
 					.filter(Boolean)
 					.map((s) => `(${s})`)
 					.join(" ");
-				return `- ${prefix}${n.note}${suffix ? ` ${suffix}` : ""}`;
+				const header = [
+					prefix,
+					n.lyrics ? `"${n.lyrics}"` : "",
+					n.subtext ?? "",
+				]
+					.filter(Boolean)
+					.join(" · ");
+				const noteLine = `${n.note}${suffix ? ` ${suffix}` : ""}`;
+				if (n.lyrics || n.subtext) return `- _${header}_\n  ${noteLine}`;
+				return `- ${header ? `${header} ` : ""}${noteLine}`;
 			};
 
 			const sorted = [...groupNotes].sort(
