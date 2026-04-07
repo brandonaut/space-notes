@@ -134,7 +134,7 @@ export function AddNote({
 				</div>
 			</div>
 			<div className="flex gap-3 mb-4">
-				<div className="flex-1 min-w-0">
+				<div className="flex-1 min-w-0 max-w-[20%]">
 					<label className={fieldLabel} htmlFor="note-form-verb">
 						Verb
 					</label>
@@ -158,18 +158,18 @@ export function AddNote({
 						placeholder="e.g. Grief turning to acceptance"
 					/>
 				</div>
-				<div className="flex-1 min-w-0">
-					<label className={fieldLabel} htmlFor="note-form-date">
-						Date
-					</label>
-					<input
-						id="note-form-date"
-						type="date"
-						className={fieldInput}
-						value={date}
-						onChange={(e) => setDate(e.target.value)}
-					/>
-				</div>
+			</div>
+			<div className="mb-4">
+				<label className={fieldLabel} htmlFor="note-form-date">
+					Date
+				</label>
+				<input
+					id="note-form-date"
+					type="date"
+					className={fieldInput}
+					value={date}
+					onChange={(e) => setDate(e.target.value)}
+				/>
 			</div>
 			<div className="mb-4">
 				{/* biome-ignore lint/a11y/noLabelWithoutControl: group label for chip set */}
