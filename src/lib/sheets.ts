@@ -52,6 +52,7 @@ export async function loadNotes(): Promise<Note[]> {
 			date: obj.date,
 			note: obj.note,
 			lyrics: obj.lyrics ?? "",
+			subtext: obj.subtext ?? "",
 			archive: obj.archive === "true",
 			_row: i + 2,
 			parts: (obj.part || "")
@@ -118,7 +119,7 @@ export async function updateRow(
 	values: SheetRow,
 	getToken: () => Promise<string>,
 ): Promise<void> {
-	const range = encodeURIComponent(`${SHEET_NAME}!A${row}:I${row}`);
+	const range = encodeURIComponent(`${SHEET_NAME}!A${row}:J${row}`);
 	await fetchAuth(
 		`${BASE}/values/${range}?valueInputOption=RAW`,
 		{ method: "PUT", body: JSON.stringify({ values: [values] }) },

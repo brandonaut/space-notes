@@ -63,6 +63,11 @@ export function NoteRow({
 						)}
 					</div>
 				)}
+				{note.subtext && (
+					<span className="text-xs text-muted font-medium tracking-wide">
+						{note.subtext}
+					</span>
+				)}
 				<span
 					className={`text-sm leading-relaxed text-text ${note.archive ? "opacity-40 line-through" : ""}`}
 				>

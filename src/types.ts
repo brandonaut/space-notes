@@ -7,6 +7,7 @@ export interface Note {
 	categories: string[];
 	note: string;
 	lyrics: string;
+	subtext: string;
 	archive: boolean;
 	_row: number;
 }

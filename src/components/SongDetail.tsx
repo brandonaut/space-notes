@@ -138,6 +138,7 @@ export function SongDetail({
 					fields.note,
 					"false",
 					fields.lyrics,
+					fields.subtext,
 				],
 				getToken,
 			);
@@ -167,6 +168,7 @@ export function SongDetail({
 						fields.note,
 						note.archive ? "true" : "false",
 						fields.lyrics,
+						fields.subtext,
 					],
 					getToken,
 				);
