@@ -106,17 +106,32 @@ export function AddNote({
 					placeholder="What's this note about? Can use *bold* and _italic_."
 				/>
 			</div>
-			<div className="mb-4">
-				<label className={fieldLabel} htmlFor="note-form-lyrics">
-					Lyrics
-				</label>
-				<input
-					id="note-form-lyrics"
-					className={fieldInput}
-					value={lyrics}
-					onChange={(e) => setLyrics(e.target.value)}
-					placeholder="e.g. And I will always love you"
-				/>
+			<div className="flex gap-3 mb-4">
+				<div className="flex-1 min-w-0 max-w-[20%]">
+					<label className={fieldLabel} htmlFor="note-form-measure">
+						Measure(s)
+					</label>
+					<input
+						id="note-form-measure"
+						className={fieldInput}
+						inputMode="numeric"
+						value={measure}
+						onChange={(e) => setMeasure(e.target.value)}
+						placeholder="e.g. 32–36"
+					/>
+				</div>
+				<div className="flex-1 min-w-0">
+					<label className={fieldLabel} htmlFor="note-form-lyrics">
+						Lyrics
+					</label>
+					<input
+						id="note-form-lyrics"
+						className={fieldInput}
+						value={lyrics}
+						onChange={(e) => setLyrics(e.target.value)}
+						placeholder="e.g. And I will always love you"
+					/>
+				</div>
 			</div>
 			<div className="flex gap-3 mb-4">
 				<div className="flex-1 min-w-0">
@@ -141,21 +156,6 @@ export function AddNote({
 						value={subtext}
 						onChange={(e) => setSubtext(e.target.value)}
 						placeholder="e.g. Grief turning to acceptance"
-					/>
-				</div>
-			</div>
-			<div className="flex gap-3 mb-4">
-				<div className="flex-1 min-w-0">
-					<label className={fieldLabel} htmlFor="note-form-measure">
-						Measure(s)
-					</label>
-					<input
-						id="note-form-measure"
-						className={fieldInput}
-						inputMode="numeric"
-						value={measure}
-						onChange={(e) => setMeasure(e.target.value)}
-						placeholder="e.g. 32–36"
 					/>
 				</div>
 				<div className="flex-1 min-w-0">
