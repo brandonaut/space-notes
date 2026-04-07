@@ -8,6 +8,7 @@ export interface Note {
 	note: string;
 	lyrics: string;
 	subtext: string;
+	verb: string;
 	archive: boolean;
 	_row: number;
 }

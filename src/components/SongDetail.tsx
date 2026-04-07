@@ -139,6 +139,7 @@ export function SongDetail({
 					"false",
 					fields.lyrics,
 					fields.subtext,
+					fields.verb,
 				],
 				getToken,
 			);
@@ -169,6 +170,7 @@ export function SongDetail({
 						note.archive ? "true" : "false",
 						fields.lyrics,
 						fields.subtext,
+						fields.verb,
 					],
 					getToken,
 				);
@@ -207,12 +209,14 @@ export function SongDetail({
 				const header = [
 					prefix,
 					n.lyrics ? `"${n.lyrics}"` : "",
+					n.verb ? n.verb.toUpperCase() : "",
 					n.subtext ?? "",
 				]
 					.filter(Boolean)
 					.join(" · ");
 				const noteLine = `${n.note}${suffix ? ` ${suffix}` : ""}`;
-				if (n.lyrics || n.subtext) return `- _${header}_\n  ${noteLine}`;
+				if (n.lyrics || n.verb || n.subtext)
+					return `- _${header}_\n  ${noteLine}`;
 				return `- ${header ? `${header} ` : ""}${noteLine}`;
 			};
 

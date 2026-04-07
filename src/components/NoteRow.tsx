@@ -63,8 +63,10 @@ export function NoteRow({
 						)}
 					</div>
 				)}
-				{note.subtext && (
+				{(note.verb || note.subtext) && (
 					<span className="text-xs text-muted font-medium tracking-wide">
+						{note.verb && <span className="uppercase">{note.verb}</span>}
+						{note.verb && note.subtext && " · "}
 						{note.subtext}
 					</span>
 				)}

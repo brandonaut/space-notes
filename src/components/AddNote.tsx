@@ -11,6 +11,7 @@ export interface NoteFields {
 	note: string;
 	lyrics: string;
 	subtext: string;
+	verb: string;
 }
 
 interface AddNoteProps {
@@ -45,6 +46,7 @@ export function AddNote({
 	const [noteText, setNoteText] = useState(initialValues?.note ?? "");
 	const [lyrics, setLyrics] = useState(initialValues?.lyrics ?? "");
 	const [subtext, setSubtext] = useState(initialValues?.subtext ?? "");
+	const [verb, setVerb] = useState(initialValues?.verb ?? "");
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,6 +71,7 @@ export function AddNote({
 				note: noteText.trim(),
 				lyrics: lyrics.trim(),
 				subtext: subtext.trim(),
+				verb: verb.trim(),
 			});
 		} catch (e) {
 			if ((e as Error).message !== "auth")
@@ -115,17 +118,31 @@ export function AddNote({
 					placeholder="e.g. And I will always love you"
 				/>
 			</div>
-			<div className="mb-4">
-				<label className={fieldLabel} htmlFor="note-form-subtext">
-					Subtext
-				</label>
-				<input
-					id="note-form-subtext"
-					className={fieldInput}
-					value={subtext}
-					onChange={(e) => setSubtext(e.target.value)}
-					placeholder="e.g. Grief turning to acceptance"
-				/>
+			<div className="flex gap-3 mb-4">
+				<div className="flex-1 min-w-0">
+					<label className={fieldLabel} htmlFor="note-form-verb">
+						Verb
+					</label>
+					<input
+						id="note-form-verb"
+						className={fieldInput}
+						value={verb}
+						onChange={(e) => setVerb(e.target.value)}
+						placeholder="e.g. Plead"
+					/>
+				</div>
+				<div className="flex-1 min-w-0">
+					<label className={fieldLabel} htmlFor="note-form-subtext">
+						Subtext
+					</label>
+					<input
+						id="note-form-subtext"
+						className={fieldInput}
+						value={subtext}
+						onChange={(e) => setSubtext(e.target.value)}
+						placeholder="e.g. Grief turning to acceptance"
+					/>
+				</div>
 			</div>
 			<div className="flex gap-3 mb-4">
 				<div className="flex-1 min-w-0">
