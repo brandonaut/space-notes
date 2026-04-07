@@ -137,6 +137,7 @@ export function SongDetail({
 					fields.categories.join(","),
 					fields.note,
 					"false",
+					fields.lyrics,
 				],
 				getToken,
 			);
@@ -165,6 +166,7 @@ export function SongDetail({
 						fields.categories.join(","),
 						fields.note,
 						note.archive ? "true" : "false",
+						fields.lyrics,
 					],
 					getToken,
 				);

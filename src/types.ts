@@ -6,6 +6,7 @@ export interface Note {
 	parts: string[];
 	categories: string[];
 	note: string;
+	lyrics: string;
 	archive: boolean;
 	_row: number;
 }

@@ -42,7 +42,7 @@ export function NoteRow({
 
 	return (
 		<div
-			className={`flex items-start gap-2.5 py-2 pl-2.5 border-b border-border border-l-2 border-l-transparent ${accessToken ? "cursor-pointer" : ""}`}
+			className={`py-2 pl-2.5 border-b border-border border-l-2 border-l-transparent ${accessToken ? "cursor-pointer" : ""}`}
 			id={`note-${note.id}`}
 			data-note-row="true"
 			onClick={accessToken ? onEdit : undefined}
@@ -52,30 +52,39 @@ export function NoteRow({
 					: undefined
 			}
 		>
-			<span className="flex-shrink-0 text-xs font-medium text-muted whitespace-nowrap pt-0.5">
-				{prefix}
-			</span>
-			<span
-				className={`text-sm leading-relaxed text-text flex-1 min-w-0 ${note.archive ? "opacity-40 line-through" : ""}`}
-			>
-				{note.note.split("\n").map((line, i) => (
-					<Fragment key={`${i}-${line}`}>
-						{i > 0 && <br />}
-						{renderMarkdown(line)}
-					</Fragment>
-				))}
-				<span className="inline-flex flex-wrap gap-1 items-center ml-1.5 align-middle">
-					<PartPill parts={parts} selected={new Set(note.parts)} />
-					{note.categories.map((c) => (
-						<span
-							key={c}
-							className={`text-[10px] font-semibold py-px px-1.5 rounded-full border border-current bg-transparent ${categoryTagColors[c] ?? "text-muted"}`}
-						>
-							{c}
+			<div className="flex flex-col gap-0.5">
+				{(prefix || note.lyrics) && (
+					<div className="flex items-baseline gap-2">
+						<span className="text-xs font-medium text-muted whitespace-nowrap">
+							{prefix}
 						</span>
+						{note.lyrics && (
+							<span className="text-xs text-muted italic">"{note.lyrics}"</span>
+						)}
+					</div>
+				)}
+				<span
+					className={`text-sm leading-relaxed text-text ${note.archive ? "opacity-40 line-through" : ""}`}
+				>
+					{note.note.split("\n").map((line, i) => (
+						<Fragment key={`${i}-${line}`}>
+							{i > 0 && <br />}
+							{renderMarkdown(line)}
+						</Fragment>
 					))}
+					<span className="inline-flex flex-wrap gap-1 items-center ml-1.5 align-middle">
+						<PartPill parts={parts} selected={new Set(note.parts)} />
+						{note.categories.map((c) => (
+							<span
+								key={c}
+								className={`text-[10px] font-semibold py-px px-1.5 rounded-full border border-current bg-transparent ${categoryTagColors[c] ?? "text-muted"}`}
+							>
+								{c}
+							</span>
+						))}
+					</span>
 				</span>
-			</span>
+			</div>
 		</div>
 	);
 }

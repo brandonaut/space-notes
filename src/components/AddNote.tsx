@@ -9,6 +9,7 @@ export interface NoteFields {
 	parts: string[];
 	categories: string[];
 	note: string;
+	lyrics: string;
 }
 
 interface AddNoteProps {
@@ -41,6 +42,7 @@ export function AddNote({
 		new Set(initialValues?.categories ?? []),
 	);
 	const [noteText, setNoteText] = useState(initialValues?.note ?? "");
+	const [lyrics, setLyrics] = useState(initialValues?.lyrics ?? "");
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -63,6 +65,7 @@ export function AddNote({
 				parts: [...selParts],
 				categories: [...selCategories],
 				note: noteText.trim(),
+				lyrics: lyrics.trim(),
 			});
 		} catch (e) {
 			if ((e as Error).message !== "auth")
@@ -95,6 +98,18 @@ export function AddNote({
 					value={noteText}
 					onChange={(e) => setNoteText(e.target.value)}
 					placeholder="What's this note about? Can use *bold* and _italic_."
+				/>
+			</div>
+			<div className="mb-4">
+				<label className={fieldLabel} htmlFor="note-form-lyrics">
+					Lyrics
+				</label>
+				<input
+					id="note-form-lyrics"
+					className={fieldInput}
+					value={lyrics}
+					onChange={(e) => setLyrics(e.target.value)}
+					placeholder="e.g. And I will always love you"
 				/>
 			</div>
 			<div className="flex gap-3 mb-4">

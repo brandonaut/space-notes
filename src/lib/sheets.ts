@@ -51,6 +51,7 @@ export async function loadNotes(): Promise<Note[]> {
 			measure: obj.measure,
 			date: obj.date,
 			note: obj.note,
+			lyrics: obj.lyrics ?? "",
 			archive: obj.archive === "true",
 			_row: i + 2,
 			parts: (obj.part || "")
