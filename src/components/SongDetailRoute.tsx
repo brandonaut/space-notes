@@ -7,6 +7,7 @@ interface SongDetailRouteProps {
 	readonly parts: string[];
 	readonly categories: string[];
 	readonly accessToken: string | null;
+	readonly sheetIds: Record<string, number>;
 	readonly onNotesChange: (notes: Note[]) => void;
 	readonly showToast: (msg: string, color?: string) => void;
 }
@@ -16,6 +17,7 @@ export function SongDetailRoute({
 	parts,
 	categories,
 	accessToken,
+	sheetIds,
 	onNotesChange,
 	showToast,
 }: Readonly<SongDetailRouteProps>) {
@@ -31,6 +33,7 @@ export function SongDetailRoute({
 			parts={parts}
 			categories={categories}
 			accessToken={accessToken}
+			sheetIds={sheetIds}
 			onBack={() => navigate("/")}
 			onNotesChange={onNotesChange}
 			showToast={showToast}

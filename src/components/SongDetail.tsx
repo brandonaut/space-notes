@@ -1,9 +1,29 @@
+import {
+	DndContext,
+	type DragEndEvent,
+	KeyboardSensor,
+	PointerSensor,
+	closestCenter,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { ClipboardCopy } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDate, measureStart } from "../../utils.js";
 import { getToken } from "../lib/auth";
-import { SHEET_NAME } from "../lib/config";
-import { appendRow, deleteNoteRow, updateCell, updateRow } from "../lib/sheets";
+import { SONG_SHEET_PREFIX } from "../lib/config";
+import {
+	appendRow,
+	deleteNoteRow,
+	moveNoteRow,
+	updateCell,
+	updateRow,
+} from "../lib/sheets";
 import type { Note, View } from "../types";
 import type { NoteFields } from "./AddNote";
 import { AddNote } from "./AddNote";
@@ -11,6 +31,7 @@ import { FilterChips } from "./FilterChips";
 import { Modal } from "./Modal";
 import { NoteRow } from "./NoteRow";
 import { PartPill } from "./PartPill";
+import { SortableNoteRow } from "./SortableNoteRow";
 
 type ModalState = null | { mode: "add" } | { mode: "edit"; note: Note };
 
@@ -20,6 +41,7 @@ interface SongDetailProps {
 	parts: string[];
 	categories: string[];
 	accessToken: string | null;
+	sheetIds: Record<string, number>;
 	onBack: () => void;
 	onNotesChange: (updater: (prev: Note[]) => Note[]) => void;
 	showToast: (msg: string, color?: string) => void;
@@ -31,25 +53,39 @@ export function SongDetail({
 	parts,
 	categories,
 	accessToken,
+	sheetIds,
 	onBack,
 	onNotesChange,
 	showToast,
 }: Readonly<SongDetailProps>) {
-	const [view, setView] = useState<View>("measure");
+	const [view, setView] = useState<View>("custom");
 	const [activeFilters, setActiveFilters] = useState(new Set<string>());
 	const [activeCategoryFilters, setActiveCategoryFilters] = useState(
 		new Set<string>(),
 	);
 	const [modalState, setModalState] = useState<ModalState>(null);
 
+	// Snapshot of notes before an optimistic drag reorder, used to revert on error.
+	const notesSnapshot = useRef<Note[]>(notes);
+	useEffect(() => {
+		notesSnapshot.current = notes;
+	}, [notes]);
+
 	// Reset local state when the song changes
 	// biome-ignore lint/correctness/useExhaustiveDependencies: song is the intentional trigger
 	useEffect(() => {
-		setView("measure");
+		setView("custom");
 		setActiveFilters(new Set());
 		setActiveCategoryFilters(new Set());
 		setModalState(null);
 	}, [song]);
+
+	const sensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		}),
+	);
 
 	const songNotes = notes.filter((n) => n.song === song);
 	let filtered = songNotes;
@@ -75,7 +111,7 @@ export function SongDetail({
 			);
 			try {
 				await updateCell(
-					`${SHEET_NAME}!H${note._row}`,
+					`${SONG_SHEET_PREFIX}${song}!H${note._row}`,
 					archive ? "true" : "false",
 					getToken,
 				);
@@ -88,7 +124,7 @@ export function SongDetail({
 					showToast("Could not save — try again", "#c96b6b");
 			}
 		},
-		[notes, onNotesChange, showToast],
+		[notes, song, onNotesChange, showToast],
 	);
 
 	const handleDelete = useCallback(
@@ -96,8 +132,13 @@ export function SongDetail({
 			const note = notes.find((n) => n.id === id);
 			if (!note) return false;
 			if (!confirm("Delete this note permanently?")) return false;
+			const sheetId = sheetIds[song];
+			if (sheetId === undefined) {
+				showToast("Cannot delete — sheet not found", "#c96b6b");
+				return false;
+			}
 			try {
-				await deleteNoteRow(note, getToken);
+				await deleteNoteRow(note, sheetId, getToken);
 				onNotesChange((prev) =>
 					prev
 						.filter((n) => n.id !== id)
@@ -114,7 +155,7 @@ export function SongDetail({
 				return false;
 			}
 		},
-		[notes, onNotesChange, showToast],
+		[notes, song, sheetIds, onNotesChange, showToast],
 	);
 
 	const handleCreate = useCallback(
@@ -128,6 +169,7 @@ export function SongDetail({
 				_row: notes.length + 2,
 			};
 			await appendRow(
+				song,
 				[
 					id,
 					song,
@@ -158,6 +200,7 @@ export function SongDetail({
 			onNotesChange((prev) => prev.map((n) => (n.id === id ? updated : n)));
 			try {
 				await updateRow(
+					song,
 					note._row,
 					[
 						note.id,
@@ -181,7 +224,51 @@ export function SongDetail({
 				throw e;
 			}
 		},
-		[notes, onNotesChange, showToast],
+		[notes, song, onNotesChange, showToast],
+	);
+
+	const handleDragEnd = useCallback(
+		async (event: DragEndEvent) => {
+			const { active, over } = event;
+			if (!over || active.id === over.id) return;
+
+			const activeNote = notes.find(
+				(n) => n.id === active.id && n.song === song,
+			);
+			const overNote = notes.find((n) => n.id === over.id && n.song === song);
+			if (!activeNote || !overNote) return;
+
+			const sheetId = sheetIds[song];
+			if (sheetId === undefined) {
+				showToast("Cannot reorder — sheet not found", "#c96b6b");
+				return;
+			}
+
+			const fromRow = activeNote._row;
+			const toRow = overNote._row;
+			const snapshot = notesSnapshot.current;
+
+			// Optimistic update: move note and fix _row values for shifted notes
+			onNotesChange((prev) =>
+				prev.map((n) => {
+					if (n.id === active.id) return { ...n, _row: toRow };
+					if (fromRow < toRow && n._row > fromRow && n._row <= toRow)
+						return { ...n, _row: n._row - 1 };
+					if (fromRow > toRow && n._row >= toRow && n._row < fromRow)
+						return { ...n, _row: n._row + 1 };
+					return n;
+				}),
+			);
+
+			try {
+				await moveNoteRow(sheetId, fromRow, toRow, getToken);
+			} catch (e) {
+				onNotesChange(() => snapshot);
+				if ((e as Error).message !== "auth")
+					showToast("Could not reorder — try again", "#c96b6b");
+			}
+		},
+		[notes, song, sheetIds, onNotesChange, showToast],
 	);
 
 	const copyGroup = useCallback(
@@ -221,7 +308,9 @@ export function SongDetail({
 			};
 
 			const sorted = [...groupNotes].sort(
-				(a, b) => measureStart(a.measure) - measureStart(b.measure),
+				view === "custom"
+					? (a, b) => a._row - b._row
+					: (a, b) => measureStart(a.measure) - measureStart(b.measure),
 			);
 			const isDateGroup = groupKey !== "active" && groupKey !== "archived";
 			const header = isDateGroup
@@ -233,7 +322,7 @@ export function SongDetail({
 				.then(() => showToast("Copied ✓"))
 				.catch(() => showToast("Could not copy", "#c96b6b"));
 		},
-		[filtered, song, showToast],
+		[filtered, song, view, showToast],
 	);
 
 	function groupHeader(label: string, key: string) {
@@ -252,10 +341,6 @@ export function SongDetail({
 		);
 	}
 
-	const byMeasure = (a: Note, b: Note) =>
-		(a.measure ? measureStart(a.measure) : -1) -
-			(b.measure ? measureStart(b.measure) : -1) || (a.date < b.date ? 1 : -1);
-
 	function renderGroups() {
 		if (!filtered.length) {
 			return (
@@ -264,15 +349,39 @@ export function SongDetail({
 				</div>
 			);
 		}
-		if (view === "measure") {
-			const open = filtered.filter((n) => !n.archive).sort(byMeasure);
-			const archived = filtered.filter((n) => n.archive).sort(byMeasure);
+		if (view === "custom") {
+			const open = filtered
+				.filter((n) => !n.archive)
+				.sort((a, b) => a._row - b._row);
+			const archived = filtered
+				.filter((n) => n.archive)
+				.sort((a, b) => a._row - b._row);
+			const activeIds = open.map((n) => n.id);
 			return (
 				<>
 					{open.length > 0 && (
 						<>
 							{groupHeader("Active", "active")}
-							{open.map((n) => renderNoteRow(n))}
+							<DndContext
+								sensors={sensors}
+								collisionDetection={closestCenter}
+								onDragEnd={handleDragEnd}
+							>
+								<SortableContext
+									items={activeIds}
+									strategy={verticalListSortingStrategy}
+								>
+									{open.map((n) => (
+										<SortableNoteRow
+											key={n.id}
+											note={n}
+											parts={parts}
+											accessToken={accessToken}
+											onEdit={() => setModalState({ mode: "edit", note: n })}
+										/>
+									))}
+								</SortableContext>
+							</DndContext>
 						</>
 					)}
 					{archived.length > 0 && (
@@ -333,12 +442,12 @@ export function SongDetail({
 			<div className="flex items-center gap-2.5 mb-5">
 				<div className="flex bg-surface2 rounded-lg p-0.5 flex-1">
 					<button
-						id="btn-measure"
+						id="btn-custom"
 						type="button"
-						className={`flex-1 py-2 px-2 border-none rounded-md text-xs font-medium cursor-pointer transition-all tracking-[0.04em] ${view === "measure" ? "bg-surface text-text shadow-sm" : "bg-transparent text-muted"}`}
-						onClick={() => setView("measure")}
+						className={`flex-1 py-2 px-2 border-none rounded-md text-xs font-medium cursor-pointer transition-all tracking-[0.04em] ${view === "custom" ? "bg-surface text-text shadow-sm" : "bg-transparent text-muted"}`}
+						onClick={() => setView("custom")}
 					>
-						By Measure
+						Custom
 					</button>
 					<button
 						id="btn-chron"

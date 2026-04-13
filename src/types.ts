@@ -19,4 +19,4 @@ export interface Config {
 	songs: string[];
 }
 
-export type View = "measure" | "chron";
+export type View = "custom" | "chron";

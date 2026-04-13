@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { initAuth } from "../lib/auth";
 import { DEFAULT_CATEGORIES, DEFAULT_PARTS } from "../lib/config";
-import { loadConfig, loadNotes } from "../lib/sheets";
+import { getSheetMeta, loadConfig, loadNotes } from "../lib/sheets";
 import type { Config, Note } from "../types";
 import { About } from "./About";
 import { Header } from "./Header";
@@ -22,6 +22,7 @@ export function App() {
 		categories: DEFAULT_CATEGORIES,
 		songs: [],
 	});
+	const [sheetIds, setSheetIds] = useState<Record<string, number>>({});
 	const [accessToken, setAccessToken] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [listError, setListError] = useState<string | null>(null);
@@ -35,11 +36,12 @@ export function App() {
 		toastTimer.current = setTimeout(() => setToast(null), 2400);
 	}, []);
 
-	const fetchNotes = useCallback(async () => {
+	const fetchNotes = useCallback(async (songs: string[]) => {
+		if (!songs.length) return;
 		setIsLoading(true);
 		setListError(null);
 		try {
-			const loaded = await loadNotes();
+			const loaded = await loadNotes(songs);
 			setNotes(loaded);
 		} catch {
 			setListError(
@@ -52,12 +54,20 @@ export function App() {
 
 	useEffect(() => {
 		initAuth(setAccessToken);
-		loadConfig()
-			.then(setConfig)
-			.catch(() => {
-				// Config load failed — built-in defaults remain active
+
+		Promise.all([loadConfig(), getSheetMeta()])
+			.then(([cfg, ids]) => {
+				setConfig(cfg);
+				setSheetIds(ids);
+				fetchNotes(cfg.songs);
+			})
+			.catch((e) => {
+				console.error("Startup load failed", e);
+				setIsLoading(false);
+				setListError(
+					"Could not load notes. Check your connection and try refreshing.",
+				);
 			});
-		fetchNotes();
 	}, [fetchNotes]);
 
 	return (
@@ -82,7 +92,7 @@ export function App() {
 							onOpenSong={(song) =>
 								navigate(`/songs/${encodeURIComponent(song)}`)
 							}
-							onRefresh={fetchNotes}
+							onRefresh={() => fetchNotes(config.songs)}
 						/>
 					}
 				/>
@@ -94,6 +104,7 @@ export function App() {
 							parts={config.parts}
 							categories={config.categories}
 							accessToken={accessToken}
+							sheetIds={sheetIds}
 							onNotesChange={setNotes}
 							showToast={showToast}
 						/>
