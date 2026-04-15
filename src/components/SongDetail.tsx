@@ -33,7 +33,10 @@ import { NoteRow } from "./NoteRow";
 import { PartPill } from "./PartPill";
 import { SortableNoteRow } from "./SortableNoteRow";
 
-type ModalState = null | { mode: "add" } | { mode: "edit"; note: Note };
+type ModalState =
+	| null
+	| { mode: "add"; insertAfterNote: Note | null }
+	| { mode: "edit"; note: Note };
 
 interface SongDetailProps {
 	song: string;
@@ -144,7 +147,7 @@ export function SongDetail({
 						.filter((n) => n.id !== id)
 						.map((n) => ({
 							...n,
-							_row: n._row > note._row ? n._row - 1 : n._row,
+							_row: n.song === song && n._row > note._row ? n._row - 1 : n._row,
 						})),
 				);
 				showToast("Note deleted");
@@ -159,15 +162,14 @@ export function SongDetail({
 	);
 
 	const handleCreate = useCallback(
-		async (fields: NoteFields) => {
+		async (fields: NoteFields, insertAfterNote: Note | null) => {
 			const id = String(Date.now());
-			const newNote = {
-				id,
-				song,
-				...fields,
-				archive: false,
-				_row: notes.length + 2,
-			};
+			const currentSongNotes = notes.filter((n) => n.song === song);
+			const bottomRow =
+				currentSongNotes.length > 0
+					? Math.max(...currentSongNotes.map((n) => n._row)) + 1
+					: 2;
+
 			await appendRow(
 				song,
 				[
@@ -185,11 +187,38 @@ export function SongDetail({
 				],
 				getToken,
 			);
+
+			let finalRow = bottomRow;
+			if (insertAfterNote) {
+				const targetRow = insertAfterNote._row + 1;
+				const sheetId = sheetIds[song];
+				if (sheetId !== undefined) {
+					await moveNoteRow(sheetId, bottomRow, targetRow, getToken);
+					finalRow = targetRow;
+				}
+			}
+
+			const newNote: Note = {
+				id,
+				song,
+				...fields,
+				archive: false,
+				_row: finalRow,
+			};
 			showToast("Note saved ✓");
-			onNotesChange((prev) => [...prev, newNote]);
+			onNotesChange((prev) => {
+				const shifted = insertAfterNote
+					? prev.map((n) =>
+							n.song === song && n._row >= finalRow
+								? { ...n, _row: n._row + 1 }
+								: n,
+						)
+					: prev;
+				return [...shifted, newNote];
+			});
 			setModalState(null);
 		},
-		[song, notes, onNotesChange, showToast],
+		[song, notes, sheetIds, onNotesChange, showToast],
 	);
 
 	const handleSaveEdit = useCallback(
@@ -248,10 +277,12 @@ export function SongDetail({
 			const toRow = overNote._row;
 			const snapshot = notesSnapshot.current;
 
-			// Optimistic update: move note and fix _row values for shifted notes
+			// Optimistic update: move note and fix _row values for shifted notes.
+			// Scope _row changes to this song only — other songs use independent sheets.
 			onNotesChange((prev) =>
 				prev.map((n) => {
 					if (n.id === active.id) return { ...n, _row: toRow };
+					if (n.song !== song) return n;
 					if (fromRow < toRow && n._row > fromRow && n._row <= toRow)
 						return { ...n, _row: n._row - 1 };
 					if (fromRow > toRow && n._row >= toRow && n._row < fromRow)
@@ -371,17 +402,37 @@ export function SongDetail({
 									items={activeIds}
 									strategy={verticalListSortingStrategy}
 								>
-									{open.map((n) => (
+									{open.map((n, i) => (
 										<SortableNoteRow
 											key={n.id}
 											note={n}
 											parts={parts}
 											accessToken={accessToken}
 											onEdit={() => setModalState({ mode: "edit", note: n })}
+											showInsert={!!accessToken && i < open.length - 1}
+											onInsert={() =>
+												setModalState({ mode: "add", insertAfterNote: n })
+											}
 										/>
 									))}
 								</SortableContext>
 							</DndContext>
+							{accessToken && (
+								<div className="flex justify-center py-1.5">
+									<button
+										type="button"
+										className="px-4 py-1 rounded-full border border-dashed border-border hover:border-accent text-muted hover:text-accent text-sm font-bold transition-colors bg-transparent cursor-pointer leading-none"
+										onClick={() =>
+											setModalState({
+												mode: "add",
+												insertAfterNote: open[open.length - 1] ?? null,
+											})
+										}
+									>
+										+
+									</button>
+								</div>
+							)}
 						</>
 					)}
 					{archived.length > 0 && (
@@ -486,15 +537,7 @@ export function SongDetail({
 				</div>
 			)}
 			<div id="detail-notes">{renderGroups()}</div>
-			{accessToken && (
-				<button
-					className="fixed bottom-6 right-5 w-14 h-14 rounded-full bg-accent text-bg border-none text-[30px] font-light leading-none cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.5)] flex items-center justify-center z-50 transition-all active:scale-90"
-					type="button"
-					onClick={() => setModalState({ mode: "add" })}
-				>
-					+
-				</button>
-			)}
+
 			{modalState !== null && (
 				<Modal
 					title={modalState.mode === "add" ? "Add a Note" : "Edit Note"}
@@ -520,7 +563,7 @@ export function SongDetail({
 						onCancel={() => setModalState(null)}
 						onSubmit={
 							modalState.mode === "add"
-								? handleCreate
+								? (fields) => handleCreate(fields, modalState.insertAfterNote)
 								: (fields) => handleSaveEdit(modalState.note.id, fields)
 						}
 					/>

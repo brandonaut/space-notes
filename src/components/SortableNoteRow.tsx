@@ -8,6 +8,8 @@ interface SortableNoteRowProps {
 	parts: string[];
 	accessToken: string | null;
 	onEdit: () => void;
+	showInsert?: boolean;
+	onInsert?: () => void;
 }
 
 export function SortableNoteRow({
@@ -15,6 +17,8 @@ export function SortableNoteRow({
 	parts,
 	accessToken,
 	onEdit,
+	showInsert,
+	onInsert,
 }: Readonly<SortableNoteRowProps>) {
 	const {
 		attributes,
@@ -40,6 +44,17 @@ export function SortableNoteRow({
 				onEdit={onEdit}
 				dragHandleProps={{ ...attributes, ...listeners }}
 			/>
+			{showInsert && (
+				<div className="flex justify-center py-1.5">
+					<button
+						type="button"
+						className="px-4 py-1 rounded-full border border-dashed border-border hover:border-accent text-muted hover:text-accent text-sm font-bold transition-colors bg-transparent cursor-pointer leading-none"
+						onClick={onInsert}
+					>
+						+
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }

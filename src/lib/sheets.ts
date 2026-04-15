@@ -218,9 +218,10 @@ export async function moveNoteRow(
 	getToken: () => Promise<string>,
 ): Promise<void> {
 	const sourceIndex = fromRow - 1;
-	// destinationIndex is 0-indexed and refers to position after source removal.
-	// Setting it to toRow - 1 places the moved row at the over-item's position.
-	const destinationIndex = toRow - 1;
+	// moveDimension uses "before-removal" coordinates: destinationIndex is the
+	// original-grid position where the source should end up. Down-move: toRow;
+	// up-move: toRow - 1.
+	const destinationIndex = toRow > fromRow ? toRow : toRow - 1;
 	await fetchAuth(
 		`${BASE}:batchUpdate`,
 		{
