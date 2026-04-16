@@ -24,14 +24,15 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 ### GitHub Pages (automated)
 
 1. Enable Pages in **Settings → Pages**, source: **GitHub Actions**
-2. Create and push a version tag:
+2. Update version in `packages.json`
+3. Create and push a version tag:
 
    ```bash
    git tag v1.0.0 && git push origin v1.0.0
    ```
 
-3. The workflow builds and publishes automatically
-4. Your URL: `https://<username>.github.io/<repo>`
+4. The workflow builds and publishes automatically
+5. Your URL: `https://<username>.github.io/<repo>`
 
 Once deployed, **pin the URL in your Slack channel** so members always have it one tap away.
 
