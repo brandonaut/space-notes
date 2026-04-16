@@ -21,14 +21,6 @@ Directors and section leaders add notes after rehearsal; chorus members browse t
 
 ## Deployment
 
-Host the three files (`index.html`, `app.css`, `app.js`) anywhere that serves static files:
-
-### Netlify Drop (recommended — no account needed)
-
-1. Go to [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Drag the folder onto the page
-3. Copy the generated URL
-
 ### GitHub Pages (automated)
 
 1. Enable Pages in **Settings → Pages**, source: **GitHub Actions**
@@ -105,7 +97,7 @@ Tap **↻** on the home screen to pull the latest notes from the sheet.
 
 ## Configuration
 
-The API key, OAuth client ID, and Sheet ID are set at the top of `app.js`:
+The API key, OAuth client ID, and Sheet ID are set at the top of `config.ts`:
 
 ```javascript
 const API_KEY    = '...';
@@ -118,6 +110,7 @@ const SHEET_NAME = 'Sheet1';
 
 ```bash
 bun install
+bun run pre-commit install
 bun run dev    # serves on http://localhost:3000
 bun run test   # run the unit test suite
 ```
