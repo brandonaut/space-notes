@@ -4,6 +4,7 @@ export const CLIENT_ID =
 export const SHEET_ID = "1V2SNY3C8Pd5Jw5ozg6fQAAp_ndPuw8X7IH5V7RQYvC0";
 export const CONFIG_SHEET_NAME = "Config";
 export const SONG_SHEET_PREFIX = "Song:";
+export const ARCHIVED_SHEET_PREFIX = "Archived:";
 export const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 
 export const DEFAULT_PARTS = ["Tenor", "Lead", "Baritone", "Bass"];

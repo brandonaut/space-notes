@@ -16,7 +16,6 @@ export interface Note {
 export interface Config {
 	parts: string[];
 	categories: string[];
-	songs: string[];
 }
 
 export type View = "custom" | "chron";
