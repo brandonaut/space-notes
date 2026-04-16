@@ -1,5 +1,5 @@
 import { RotateCw } from "lucide-react";
-import { formatDate } from "../../utils.js";
+import { formatDate } from "../lib/utils";
 import type { Note } from "../types";
 
 interface SongListProps {

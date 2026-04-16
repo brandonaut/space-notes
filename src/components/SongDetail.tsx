@@ -14,9 +14,18 @@ import {
 } from "@dnd-kit/sortable";
 import { ClipboardCopy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatDate, measureStart } from "../../utils.js";
 import { getToken } from "../lib/auth";
 import { SONG_SHEET_PREFIX } from "../lib/config";
+import {
+	buildCopyText,
+	computeBottomRow,
+	filterNotes,
+	groupByDate,
+	reorderRows,
+	selectCopyGroupNotes,
+	shiftRowsAfterDelete,
+	shiftRowsForInsert,
+} from "../lib/noteHelpers";
 import {
 	appendRow,
 	deleteNoteRow,
@@ -24,6 +33,7 @@ import {
 	updateCell,
 	updateRow,
 } from "../lib/sheets";
+import { formatDate, measureStart } from "../lib/utils";
 import type { Note, View } from "../types";
 import type { NoteFields } from "./AddNote";
 import { AddNote } from "./AddNote";
@@ -91,17 +101,7 @@ export function SongDetail({
 	);
 
 	const songNotes = notes.filter((n) => n.song === song);
-	let filtered = songNotes;
-	if (activeFilters.size > 0)
-		filtered = filtered.filter(
-			(n) => n.parts.length === 0 || n.parts.some((p) => activeFilters.has(p)),
-		);
-	if (activeCategoryFilters.size > 0)
-		filtered = filtered.filter(
-			(n) =>
-				n.categories.length === 0 ||
-				n.categories.some((c) => activeCategoryFilters.has(c)),
-		);
+	const filtered = filterNotes(songNotes, activeFilters, activeCategoryFilters);
 
 	const openCount = songNotes.filter((n) => !n.archive).length;
 
@@ -143,12 +143,11 @@ export function SongDetail({
 			try {
 				await deleteNoteRow(note, sheetId, getToken);
 				onNotesChange((prev) =>
-					prev
-						.filter((n) => n.id !== id)
-						.map((n) => ({
-							...n,
-							_row: n.song === song && n._row > note._row ? n._row - 1 : n._row,
-						})),
+					shiftRowsAfterDelete(
+						prev.filter((n) => n.id !== id),
+						song,
+						note._row,
+					),
 				);
 				showToast("Note deleted");
 				return true;
@@ -165,10 +164,7 @@ export function SongDetail({
 		async (fields: NoteFields, insertAfterNote: Note | null) => {
 			const id = String(Date.now());
 			const currentSongNotes = notes.filter((n) => n.song === song);
-			const bottomRow =
-				currentSongNotes.length > 0
-					? Math.max(...currentSongNotes.map((n) => n._row)) + 1
-					: 2;
+			const bottomRow = computeBottomRow(currentSongNotes);
 
 			await appendRow(
 				song,
@@ -208,11 +204,7 @@ export function SongDetail({
 			showToast("Note saved ✓");
 			onNotesChange((prev) => {
 				const shifted = insertAfterNote
-					? prev.map((n) =>
-							n.song === song && n._row >= finalRow
-								? { ...n, _row: n._row + 1 }
-								: n,
-						)
+					? shiftRowsForInsert(prev, song, finalRow)
 					: prev;
 				return [...shifted, newNote];
 			});
@@ -277,18 +269,8 @@ export function SongDetail({
 			const toRow = overNote._row;
 			const snapshot = notesSnapshot.current;
 
-			// Optimistic update: move note and fix _row values for shifted notes.
-			// Scope _row changes to this song only — other songs use independent sheets.
 			onNotesChange((prev) =>
-				prev.map((n) => {
-					if (n.id === active.id) return { ...n, _row: toRow };
-					if (n.song !== song) return n;
-					if (fromRow < toRow && n._row > fromRow && n._row <= toRow)
-						return { ...n, _row: n._row - 1 };
-					if (fromRow > toRow && n._row >= toRow && n._row < fromRow)
-						return { ...n, _row: n._row + 1 };
-					return n;
-				}),
+				reorderRows(prev, song, String(active.id), fromRow, toRow),
 			);
 
 			try {
@@ -304,52 +286,14 @@ export function SongDetail({
 
 	const copyGroup = useCallback(
 		(groupKey: string) => {
-			let groupNotes = filtered;
-			if (groupKey === "active")
-				groupNotes = groupNotes.filter((n) => !n.archive);
-			else if (groupKey === "archived")
-				groupNotes = groupNotes.filter((n) => n.archive);
-			else groupNotes = groupNotes.filter((n) => n.date === groupKey);
-
+			const groupNotes = selectCopyGroupNotes(filtered, groupKey);
 			if (!groupNotes.length) {
 				showToast("No notes to copy", "#7a7585");
 				return;
 			}
-
-			const fmt = (n: Note) => {
-				const prefix = n.measure ? `m.${n.measure}` : "";
-				const partsMeta = n.parts.join(", ");
-				const catsMeta = n.categories.join(", ");
-				const suffix = [partsMeta, catsMeta]
-					.filter(Boolean)
-					.map((s) => `(${s})`)
-					.join(" ");
-				const header = [
-					prefix,
-					n.lyrics ? `"${n.lyrics}"` : "",
-					n.verb ? n.verb.toUpperCase() : "",
-					n.subtext ?? "",
-				]
-					.filter(Boolean)
-					.join(" · ");
-				const noteLine = `${n.note}${suffix ? ` ${suffix}` : ""}`;
-				if (n.lyrics || n.verb || n.subtext)
-					return `- _${header}_\n  ${noteLine}`;
-				return `- ${header ? `${header} ` : ""}${noteLine}`;
-			};
-
-			const sorted = [...groupNotes].sort(
-				view === "custom"
-					? (a, b) => a._row - b._row
-					: (a, b) => measureStart(a.measure) - measureStart(b.measure),
-			);
-			const isDateGroup = groupKey !== "active" && groupKey !== "archived";
-			const header = isDateGroup
-				? `*${song}* — ${formatDate(groupKey)}`
-				: `*${song}*`;
-			const text = `${header}\n${sorted.map(fmt).join("\n")}`;
+			const text = buildCopyText(song, groupKey, groupNotes, view);
 			navigator.clipboard
-				.writeText(text.trim())
+				.writeText(text)
 				.then(() => showToast("Copied ✓"))
 				.catch(() => showToast("Could not copy", "#c96b6b"));
 		},
@@ -445,11 +389,7 @@ export function SongDetail({
 			);
 		}
 		// Chronological view
-		const groups: Record<string, Note[]> = {};
-		for (const n of filtered) {
-			if (!groups[n.date]) groups[n.date] = [];
-			groups[n.date].push(n);
-		}
+		const groups = groupByDate(filtered);
 		return Object.keys(groups)
 			.sort((a, b) => b.localeCompare(a))
 			.map((d) => (

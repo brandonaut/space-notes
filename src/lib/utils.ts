@@ -13,13 +13,13 @@ const MONTHS = [
 	"Dec",
 ];
 
-export function formatDate(d) {
+export function formatDate(d: string | null | undefined): string {
 	if (!d) return "";
 	const [y, m, day] = d.split("-");
 	return `${MONTHS[+m - 1]} ${+day}, ${y}`;
 }
 
-export function measureStart(m) {
-	const n = Number.parseInt((m || "0").toString().replace(/[^0-9]/, ""));
+export function measureStart(m: string | null | undefined): number {
+	const n = Number.parseInt((m || "0").toString().replace(/\D/, ""));
 	return Number.isNaN(n) ? 9999 : n;
 }

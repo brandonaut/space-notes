@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, measureStart } from "./utils.js";
+import { formatDate, measureStart } from "./utils";
 
 describe("formatDate", () => {
 	it("formats a standard date", () => {
@@ -52,7 +52,7 @@ describe("measureStart", () => {
 		expect(measureStart("abc")).toBe(9999);
 	});
 
-	it("returns 9999 for undefined", () => {
+	it("returns 0 for undefined", () => {
 		expect(measureStart(undefined)).toBe(0);
 	});
 });

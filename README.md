@@ -118,5 +118,6 @@ const SHEET_NAME = 'Sheet1';
 
 ```bash
 bun install
-bun run dev   # serves on http://localhost:3000
+bun run dev    # serves on http://localhost:3000
+bun run test   # run the unit test suite
 ```
