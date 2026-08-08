@@ -1,5 +1,7 @@
 # 🎵 Space Notes
 
+> [!NOTE] DEPRECATED. Not useful enough to continue developing.
+
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=brandonaut_space-notes)](https://sonarcloud.io/summary/new_code?id=brandonaut_space-notes)
 
 A mobile-first web app for capturing and browsing barbershop chorus rehearsal notes.
